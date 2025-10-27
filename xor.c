@@ -77,7 +77,7 @@ int main()
 	{
         	double h[2];
         	for (int i = 0; i < 2; i++) 
-            	h[i] = sigmoid(input[s][0] * w_input_hidden[0][i] + input[s][1] * w_input_hidden[1][i] + b_hidden[i]);
+            		h[i] = sigmoid(input[s][0] * w_input_hidden[0][i] + input[s][1] * w_input_hidden[1][i] + b_hidden[i]);
        		double output = sigmoid(h[0] * w_hidden_output[0] + h[1] * w_hidden_output[1] + b_output);
         	printf("[%g, %g] => %.4f\n", input[s][0], input[s][1], output);
 	}
