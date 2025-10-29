@@ -18,5 +18,11 @@ make extra-clean
 ```
 
 ## Solver
+```
+./solver 'word to search'
+```
 
 ## Neural network
+```
+./xor
+```
