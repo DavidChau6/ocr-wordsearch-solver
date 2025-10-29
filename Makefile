@@ -27,7 +27,7 @@ $(TARGET_SOLVER): $(SOLVER_OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET_SOLVER) $(SOLVER_OBJS)
 
 $(TARGET_XOR): $(XOR_OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET_XOR) $(XOR_OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET_XOR) $(XOR_OBJS) $(MATH_LIB)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(SDL_CFLAGS) -c $< -o $@
