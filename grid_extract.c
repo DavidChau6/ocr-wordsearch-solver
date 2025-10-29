@@ -276,69 +276,6 @@ void split_letters(SDL_Surface *img, const char *prefix) {
     free(qy);
 }
 
-/*
-void split_letters(SDL_Surface *img, const char *prefix) {
-    int w = img->w, h = img->h;
-    Uint8 *mask = calloc(w * h, 1);
-    color_to_mask(img, mask);
-
-
-    int minx=w, maxx=0, miny=h, maxy=0;
-    for (int y=0; y<h; y++)
-        for (int x=0; x<w; x++)
-            if (mask[y*w + x]) {
-                if (x < minx) minx = x;
-                if (x > maxx) maxx = x;
-                if (y < miny) miny = y;
-                if (y > maxy) maxy = y;
-            }
-
-    int ww = maxx - minx + 1;
-    int hh = maxy - miny + 1;
-
-    
-
-    int *row = calloc(hh, sizeof(int));
-    for (int y = miny; y <= maxy; y++)
-        for (int x = minx; x <= maxx; x++)
-            if (mask[y * w + x])
-                row[y - miny]++;
-
-    int ystart[200], yend[200];
-    int thr_row = ww * 0.005;
-    int nby = find_bands(row, hh, thr_row, ystart, yend, 200);
-
-    int *col = calloc(ww, sizeof(int));
-    for (int r = 0; r < nby; r++) {
-        int y0 = miny + ystart[r];
-        int y1 = miny + yend[r];
-
-        memset(col, 0, ww * sizeof(int));
-        for (int y = y0; y <= y1; y++)
-            for (int x = minx; x <= maxx; x++)
-                if (mask[y * w + x])
-                    col[x - minx]++;
-
-        int xstart[200], xend[200];
-        int thr_col = hh * 0.0012;
-        int nbx = find_bands(col, ww, thr_col, xstart, xend, 200);
-
-
-        for (int c = 0; c < nbx; c++) {
-            int x0 = minx + xstart[c];
-            int x1 = minx + xend[c];
-            if (x1 - x0 < 3 || y1 - y0 < 3) continue;
-            char name[128];
-            snprintf(name, sizeof(name), "%s_r%02d_c%02d.bmp", prefix, r, c);
-            save_region(img, x0, y0, x1, y1, name);
-        }
-
-    }
-    free(mask);
-    free(col);
-    free(row);
-}
-*/
 void split_grid_letters(SDL_Surface *img, const char *prefix) {
     int w = img->w, h = img->h;
     Uint8 *mask = calloc(w*h, 1);
@@ -435,7 +372,7 @@ void split_grid_letters(SDL_Surface *img, const char *prefix) {
     printf("Grille : %d colonnes × %d lignes (fusionnées)\n", merged_nbx, merged_nby);
 
     if (merged_nbx < 2 || merged_nby < 2) {
-        printf("⚠️ Détection échouée.\n");
+        printf("Détection échouée.\n");
         free(mask); free(col); free(row);
         return;
     }
