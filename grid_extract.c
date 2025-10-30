@@ -252,59 +252,78 @@ void save_mask_as_bmp(Uint8 *mask, int w, int h, const char *filename) {
 	SDL_FreeSurface(surf);
 }
 
-
-
-
-
-
 void split_letters(SDL_Surface *img, const char *prefix) {
     int w = img->w, h = img->h;
     Uint8 *mask = calloc(w * h, 1);
+    color_to_mask(img, mask);
+    
+    int *row = calloc(h, sizeof(int));
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            if (mask[y*w + x]) row[y]++;
 
+    int ystart[200], yend[200];
+    int thr = w * 0.003;
+    int in = 0, s = 0, nby = 0;
+    for (int y = 0; y < h; y++) {
+        if (row[y] > thr) {
+            if (!in) { s = y; in = 1; }
+        } else if (in) {
+            ystart[nby] = s;
+            yend[nby] = y;
+            nby++;
+            in = 0;
+        }
+    }
     color_to_mask2(img, mask);
     save_mask_as_bmp(mask, w, h, "words_mask.bmp");
     int *qx = malloc(w * h * sizeof(int));
     int *qy = malloc(w * h * sizeof(int));
+    for (int m = 0; m < nby; m++) {
+        int y0 = ystart[m], y1 = yend[m];
+        int nb_letters = 0;
 
-    int nb_letters = 0;
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            if (!mask[y*w + x]) continue;
+        for (int y = y0; y <= y1; y++) {
+            for (int x = 0; x < w; x++) {
+                if (!mask[y*w + x]) continue;
 
-            int minx = x, maxx = x, miny = y, maxy = y;
-            int qh = 0, qt = 0;
-            qx[qt] = x; qy[qt] = y; qt++;
-            mask[y*w + x] = 0;
+                int minx = x, maxx = x, miny = y, maxy = y;
+                int qh = 0, qt = 0;
+                qx[qt] = x; qy[qt] = y; qt++;
+                mask[y*w + x] = 0;
 
-            while (qh < qt) {
-                int cx = qx[qh], cy = qy[qh]; qh++;
-                const int dx[4] = {1,-1,0,0};
-                const int dy[4] = {0,0,1,-1};
-                for (int k = 0; k < 4; k++) {
-                    int nx = cx + dx[k], ny = cy + dy[k];
-                    if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-                    if (mask[ny*w + nx]) {
-                        mask[ny*w + nx] = 0;
-                        qx[qt] = nx; qy[qt] = ny; qt++;
-                        if (nx < minx) minx = nx;
-                        if (nx > maxx) maxx = nx;
-                        if (ny < miny) miny = ny;
-                        if (ny > maxy) maxy = ny;
+                while (qh < qt) {
+                    int cx = qx[qh], cy = qy[qh]; qh++;
+                    const int dx[4] = {1,-1,0,0};
+                    const int dy[4] = {0,0,1,-1};
+                    for (int k = 0; k < 4; k++) {
+                        int nx = cx + dx[k], ny = cy + dy[k];
+                        if (nx < 0 || nx >= w || ny < y0 || ny > y1) continue;
+                        if (mask[ny*w + nx]) {
+                            mask[ny*w + nx] = 0;
+                            qx[qt] = nx; qy[qt] = ny; qt++;
+                            if (nx < minx) minx = nx;
+                            if (nx > maxx) maxx = nx;
+                            if (ny < miny) miny = ny;
+                            if (ny > maxy) maxy = ny;
+                        }
                     }
                 }
-            }
 
             if (maxx - minx < 3 || maxy - miny < 3) continue;
 
             char name[128];
-            snprintf(name, sizeof(name), "%s_letter_%03d.bmp", prefix, nb_letters++);
+            snprintf(name, sizeof(name),
+                     "%s_r%02d_c%02d.bmp", prefix, m, nb_letters++);
             save_region(img, minx, miny, maxx, maxy, name);
+            }
         }
     }
 
     free(mask);
     free(qx);
     free(qy);
+    free(row);
 }
 
 void split_grid_letters(SDL_Surface *img, const char *prefix) {
