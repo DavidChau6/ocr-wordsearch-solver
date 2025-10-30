@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 static void save_region(SDL_Surface *img, int x0, int y0, int x1, int y1, const char *name)
 {
     if (x1 <= x0 || y1 <= y0) return;
@@ -446,33 +448,100 @@ void split_grid_letters(SDL_Surface *img, const char *prefix) {
 
 
 
+SDL_Surface* rotateSurface(SDL_Surface* src, double angle)
+{
 
+    double rad = angle * M_PI / 180.0;
+    int w = src->w;
+    int h = src->h;
+    double cosA = cos(rad);
+    double sinA = sin(rad);
 
+    int newW = fabs(w * cosA) + fabs(h * sinA);
+    int newH = fabs(w * sinA) + fabs(h * cosA);
 
+    SDL_Surface* dst = SDL_CreateRGBSurface(
+        0, newW, newH,
+        src->format->BitsPerPixel,
+        src->format->Rmask, src->format->Gmask,
+        src->format->Bmask, src->format->Amask
+    );
+    if (!dst) {
+        fprintf(stderr, "Erreur SDL_CreateRGBSurface: %s\n", SDL_GetError());
+        return NULL;
+    }
 
-int main(int argc, char **argv) {
-    if (argc < 2)
-	    return 1;
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_Surface *img = IMG_Load(argv[1]);
-    Uint8 *mask = calloc(img->w * img->h, 1);
-    color_to_mask(img, mask);
+    
+    if (SDL_FillRect(dst, NULL, SDL_MapRGB(dst->format, 255, 255, 255)) != 0)
+        fprintf(stderr, "Erreur SDL_FillRect: %s\n", SDL_GetError());
 
-    int gx0,gy0,gx1,gy1,wx0,wy0,wx1,wy1;
-    detect_two_blocks(mask,img->w,img->h,&gx0,&gy0,&gx1,&gy1,&wx0,&wy0,&wx1,&wy1);
+    Uint32* srcPixels = (Uint32*)src->pixels;
+    Uint32* dstPixels = (Uint32*)dst->pixels;
 
-    save_region(img,gx0,gy0,gx1,gy1,"grid.bmp");
-    save_region(img,wx0,wy0,wx1,wy1,"words.bmp");
+    int cx = w / 2;
+    int cy = h / 2;
+    int ncx = newW / 2;
+    int ncy = newH / 2;
 
-    SDL_Surface *grid = IMG_Load("grid.bmp");
-    SDL_Surface *words = IMG_Load("words.bmp");
+    for (int y = 0; y < newH; y++) {
+        for (int x = 0; x < newW; x++) {
+            int oldX = (int)((x - ncx) * cosA + (y - ncy) * sinA + cx);
+            int oldY = (int)(-(x - ncx) * sinA + (y - ncy) * cosA + cy);
 
-    split_grid_letters(grid, "grid");
-    split_letters(words, "word");
+            if (oldX >= 0 && oldX < w && oldY >= 0 && oldY < h)
+                dstPixels[y * newW + x] = srcPixels[oldY * w + oldX];
+            
+        }
+    }
+
+    return dst;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc < 3) {
+        printf("Usage: %s <image> <angle>\n", argv[0]);
+        return 1;
+    }
+
+    const char* filename = argv[1];
+    double angle = atof(argv[2]);
+
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        fprintf(stderr, "Erreur SDL_Init: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
+    
+    SDL_Surface* img = IMG_Load(filename);
+    if (!img) {
+        fprintf(stderr, "Erreur chargement image %s: %s\n", filename, IMG_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    
+    SDL_Surface* rotated = rotateSurface(img, angle);
+    if (!rotated) {
+        SDL_FreeSurface(img);
+        SDL_Quit();
+        return 1;
+    }
+
+    
+    split_grid_letters(rotated, "grid_rot");
+    split_letters(rotated, "word_rot");
+
+    
+    SDL_SaveBMP(rotated, "rotated.bmp");
 
     SDL_FreeSurface(img);
-    SDL_FreeSurface(grid);
-    SDL_FreeSurface(words);
-    free(mask);
+    SDL_FreeSurface(rotated);
+
+    IMG_Quit();
     SDL_Quit();
+
+    return 0;
 }
