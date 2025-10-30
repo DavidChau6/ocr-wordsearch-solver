@@ -226,12 +226,43 @@ void color_to_mask2(SDL_Surface *img, Uint8 *mask) {
         }
 }
 
+
+void save_mask_as_bmp(Uint8 *mask, int w, int h, const char *filename) {
+	SDL_Surface *surf = SDL_CreateRGBSurface(0, w, h, 24, 0x0000FF, 0x00FF00, 0xFF0000, 0);
+	if (!surf) {
+	fprintf(stderr, "Erreur SDL_CreateRGBSurface: %s\n", SDL_GetError());
+	return;
+	}
+	Uint8 *pixels = surf->pixels;
+	int pitch = surf->pitch;
+
+	for (int y = 0; y < h; y++) {
+    		for (int x = 0; x < w; x++) {
+        		Uint8 v = mask[y * w + x] ? 0 : 255;
+        		Uint8 *p = pixels + y * pitch + x * 3;
+        		p[0] = v;
+        		p[1] = v;
+        		p[2] = v; 
+    		}
+	}
+
+	if (SDL_SaveBMP(surf, filename) != 0)
+    		fprintf(stderr, "Erreur SDL_SaveBMP(%s): %s\n", filename, SDL_GetError());
+
+	SDL_FreeSurface(surf);
+}
+
+
+
+
+
+
 void split_letters(SDL_Surface *img, const char *prefix) {
     int w = img->w, h = img->h;
     Uint8 *mask = calloc(w * h, 1);
 
     color_to_mask2(img, mask);
-
+    save_mask_as_bmp(mask, w, h, "words_mask.bmp");
     int *qx = malloc(w * h * sizeof(int));
     int *qy = malloc(w * h * sizeof(int));
 
@@ -280,7 +311,7 @@ void split_grid_letters(SDL_Surface *img, const char *prefix) {
     int w = img->w, h = img->h;
     Uint8 *mask = calloc(w*h, 1);
     color_to_mask(img, mask);
-
+    save_mask_as_bmp(mask, w, h, "grid_mask.bmp");
  
     int minx=w, maxx=0, miny=h, maxy=0;
     for (int y=0;y<h;y++)
