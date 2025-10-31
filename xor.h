@@ -1,9 +1,9 @@
 #ifndef XOR_H
 #define XOR_H
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
 double sigmoid(double x);
@@ -14,4 +14,3 @@ double rand_weight(void);
 int main(void);
 
 #endif
-
