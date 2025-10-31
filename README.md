@@ -10,7 +10,7 @@ make clean
 ```
 ## Image preprocessing
 ```
-./grid_extract images/'name_of_image'
+./grid_extract images/'name_of_image' angle
 ```
 To delete all the created images
 ```
@@ -19,7 +19,7 @@ make extra-clean
 
 ## Solver
 ```
-./solver 'word to search'
+./solver grid 'word to search'
 ```
 
 ## Neural network
