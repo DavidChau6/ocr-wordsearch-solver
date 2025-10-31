@@ -512,32 +512,88 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+    int flags = IMG_INIT_PNG | IMG_INIT_JPG;
+    if ((IMG_Init(flags) & flags) != flags) {
+        fprintf(stderr, "Erreur IMG_Init: %s\n", IMG_GetError());
+        SDL_Quit();
+        return 1;
+    }
 
-    
     SDL_Surface* img = IMG_Load(filename);
     if (!img) {
         fprintf(stderr, "Erreur chargement image %s: %s\n", filename, IMG_GetError());
+        IMG_Quit();
         SDL_Quit();
         return 1;
     }
 
     
-    SDL_Surface* rotated = rotateSurface(img, angle);
-    if (!rotated) {
-        SDL_FreeSurface(img);
-        SDL_Quit();
-        return 1;
-    }
-
-    
-    split_grid_letters(rotated, "grid_rot");
-    split_letters(rotated, "word_rot");
-
-    
-    SDL_SaveBMP(rotated, "rotated.bmp");
-
+    SDL_Surface* converted = SDL_ConvertSurfaceFormat(img, SDL_PIXELFORMAT_RGBA8888, 0);
     SDL_FreeSurface(img);
+    if (!converted) {
+        fprintf(stderr, "Erreur conversion image\n");
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Surface* rotated = rotateSurface(converted, angle);
+    SDL_FreeSurface(converted);
+    if (!rotated) {
+        fprintf(stderr, "Erreur rotation\n");
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    
+    int w = rotated->w;
+    int h = rotated->h;
+    Uint8* mask = calloc(w * h, 1);
+    if (!mask) {
+        fprintf(stderr, "Erreur allocation masque\n");
+        SDL_FreeSurface(rotated);
+        IMG_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    color_to_mask(rotated, mask);
+
+    
+    int gx0, gy0, gx1, gy1;
+    int wx0, wy0, wx1, wy1;
+    detect_two_blocks(mask, w, h, &gx0, &gy0, &gx1, &gy1, &wx0, &wy0, &wx1, &wy1);
+
+    printf("Grille: (%d,%d)-(%d,%d)\n", gx0, gy0, gx1, gy1);
+    printf("Mots : (%d,%d)-(%d,%d)\n", wx0, wy0, wx1, wy1);
+
+    
+    SDL_Rect grid_rect = {gx0, gy0, gx1-gx0+1, gy1-gy0+1};
+    SDL_Rect word_rect = {wx0, wy0, wx1-wx0+1, wy1-wy0+1};
+
+    SDL_Surface* grid_img = SDL_CreateRGBSurfaceWithFormat(0, grid_rect.w, grid_rect.h,
+                                                           rotated->format->BitsPerPixel,
+                                                           rotated->format->format);
+    SDL_BlitSurface(rotated, &grid_rect, grid_img, NULL);
+
+    SDL_Surface* word_img = SDL_CreateRGBSurfaceWithFormat(0, word_rect.w, word_rect.h,
+                                                           rotated->format->BitsPerPixel,
+                                                           rotated->format->format);
+    SDL_BlitSurface(rotated, &word_rect, word_img, NULL);
+
+    
+    split_grid_letters(grid_img, "grid_rot");
+    split_letters(word_img, "word_rot");
+
+    
+    SDL_SaveBMP(grid_img, "grid_only.bmp");
+    SDL_SaveBMP(word_img, "words_only.bmp");
+
+   
+    free(mask);
+    SDL_FreeSurface(grid_img);
+    SDL_FreeSurface(word_img);
     SDL_FreeSurface(rotated);
 
     IMG_Quit();
