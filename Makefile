@@ -36,6 +36,6 @@ clean:
 	rm -f $(GRID_OBJS) $(TARGET_GRID) $(SOLVER_OBJS) $(TARGET_SOLVER) $(XOR_OBJS) $(TARGET_XOR)
 
 extra-clean:
-	rm -f grid_r*.bmp word_*.bmp grid*.bmp words*.bmp
+	rm -f grid_r*.bmp word_*.bmp grid*.bmp words*.bmp step*.bmp mask*.bmp
 
 .PHONY: all clean extra-clean
