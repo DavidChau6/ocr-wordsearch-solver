@@ -60,7 +60,7 @@ void color_to_mask(SDL_Surface *img, Uint8 *mask)
             SDL_GetRGB(pix[y * w + x], img->format, &r, &g, &b);
             int lum = (r + g + b) / 3;
             int diff = abs(r - br) + abs(g - bg) + abs(b - bb);
-            mask[y * w + x] = (diff > 40 || lum < bg_lum - 30) ? 1 : 0;
+            mask[y * w + x] = (diff > 50 || lum < bg_lum - 40) ? 1 : 0;
         }
 
     int sum = 0;
@@ -496,7 +496,6 @@ void split_letters(SDL_Surface *img, const char *prefix)
     color_to_mask(img, mask);
     remove_border_connected(mask, w, h);
 
-
     int *row = calloc(h, sizeof(int));
     for (int y = 0; y < h; y++)
         for (int x = 0; x < w; x++)
@@ -524,11 +523,11 @@ void split_letters(SDL_Surface *img, const char *prefix)
             in = 0;
         }
     }
-    color_to_mask2(img, mask);
+    if (strcmp(prefix, "word_rot") == 0)
+        color_to_mask2(img, mask);
     char name_mask2[128];
     snprintf(name_mask2, sizeof(name_mask2), "%s_binary_mask.bmp", prefix);
-    save_mask_as_bmp(mask, w, h, name_mask2);
-
+    save_mask_as_bmp(mask, w, h, name_mask2);    
     Uint8 *tmp = malloc(w * h);
     memcpy(tmp, mask, w * h);
 
@@ -635,11 +634,7 @@ void split_letters(SDL_Surface *img, const char *prefix)
         len[m] = nb_letters;
     }
 
-    SDL_Surface *mask_surface;
-    if (strcmp(prefix, "grid_rot") == 0) 
-        mask_surface = SDL_LoadBMP("mask_grid.bmp");
-    else
-        mask_surface = SDL_LoadBMP("mask_words.bmp");
+    SDL_Surface *mask_surface = SDL_LoadBMP(name_mask2);
     int minus = 0;
     for (int i = 0; i < nby; i++) {
         for (int j = 0; j < len[i]; j++) {
