@@ -3,7 +3,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -g
 SDL_CFLAGS = $(shell sdl2-config --cflags)
-SDL_LIBS = $(shell sdl2-config --libs) -lSDL2_image
+SDL_LIBS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf
 MATH_LIB = -lm
 
 TARGET_GRID = grid_extract
@@ -18,6 +18,10 @@ TARGET_XOR = xor
 XOR_SRCS = xor.c
 XOR_OBJS = $(XOR_SRCS:.c=.o)
 
+TARGET_UI= test
+UI_SRCS=main.c UI.c
+UI_OBJS=${UI_SRCS:.c=.o}
+
 all: $(TARGET_GRID) $(TARGET_SOLVER) $(TARGET_XOR)
 
 $(TARGET_GRID): $(GRID_OBJS)
@@ -29,11 +33,14 @@ $(TARGET_SOLVER): $(SOLVER_OBJS)
 $(TARGET_XOR): $(XOR_OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET_XOR) $(XOR_OBJS) $(MATH_LIB)
 
+$(TARGET_UI): $(UI_OBJS)
+	$(CC) $(LDFLAGS) $(UI_OBJS) $(SDL_LIBS) -o $@
+
 %.o: %.c
 	$(CC) $(CFLAGS) $(SDL_CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(GRID_OBJS) $(TARGET_GRID) $(SOLVER_OBJS) $(TARGET_SOLVER) $(XOR_OBJS) $(TARGET_XOR)
+	rm -f $(GRID_OBJS) $(TARGET_GRID) $(SOLVER_OBJS) $(TARGET_SOLVER) $(XOR_OBJS) $(TARGET_XOR) $(UI_OBJS) $(TARGET_UI)
 
 extra-clean:
 	rm -f grid_r*.bmp word_*.bmp grid*.bmp words*.bmp step*.bmp mask*.bmp
