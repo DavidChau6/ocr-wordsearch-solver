@@ -654,7 +654,7 @@ void split_letters(SDL_Surface *img, const char *prefix)
                  j);
             save_region(mask_surface, box[i][j].x0,  box[i][j].y0,  box[i][j].x1,  box[i][j].y1, name);
             SDL_Surface *res = SDL_LoadBMP(name);
-            SDL_Surface *small = resize_surface(res, 20, 20);
+            SDL_Surface *small = resize_surface(res, 40, 40);
             SDL_SaveBMP(small, name);
             free(res);
             free(small);
