@@ -1,5 +1,6 @@
 #include "UI.h"
 
+int traite = 0;
 
 void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **texture)
 {
@@ -83,7 +84,7 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	pid_t pid = fork();
 
 	if (pid == 0) {
-   		char *args[] = {"make", "all", NULL};
+   		char *args[] = {"make", "grid_extract", NULL};
     		execvp("make", args);
     		perror("execvp a échoué"); 
     		exit(1);
@@ -229,6 +230,17 @@ int Button_Clicked(Button* b, int mx, int my)
     return -1; // aucun clic
 }
 
+int open_file(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        // Le fichier n'existe pas, on le crée
+        fclose(file);
+	return 1; 
+    } else {
+        fclose(file);
+	return 0;
+    }
+}
 
 int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int* n_im)
 {
@@ -238,13 +250,13 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 		switch(event.type)
 		{
 			case SDL_QUIT:
-				if (fork() == 0)
-				{
-					char* arg[] = {"make","extra-clean",NULL};
-					execvp(arg[0],arg);
-					perror("execvp a échoué2");
-					exit(1);
-				}
+				//if (fork() == 0)
+				//{
+				//	char* arg[] = {"make","extra-clean",NULL};
+				//	execvp(arg[0],arg);
+				//	perror("execvp a échoué2");
+				//	exit(1);
+				//}
 				return 0;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
@@ -321,15 +333,19 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 					else if (*i == 4)
 					{
 						if (b == 0)
+						{
 							*i = 0;
+							traite = 0;
+						}
 						//if(b == 1 || b == 2 || b == 3 || b == 4|| b == 5 || b == 6 || b == 7)
 						//	printf("bbiizzaaqqrree");
-						if (b == 1)
+						else if (b == 1)
 						{
 							*i = 5;
 							//A REVOIR -> Fuite de données
 							if (*n_im == 1)
 							{
+								traite = 1;
 								pid_t pid = fork();
 								if (pid == 0) {
     									char *args[] = {"./grid_extract", *currim, NULL};
@@ -346,6 +362,51 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								Image(renderer, "step1_loaded.bmp", 800, 200, &page->textmanager[5], &page->button[5], 2, 0.6,1);
 								*n_im = 2;
 							}
+						}
+						else if (b == 2)
+						{
+							if(traite == 1) 
+							{	
+								pid_t pid = fork();
+								/*
+								if (pid == 0) {
+									char *args[] = {"make", "programme", NULL};
+									execvp(args[0], args);
+									perror("execvp a échoué"); // affichera seulement si execvp échoue
+									exit(1);
+								} else if (pid > 0) {
+									int status;
+									waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
+									if (WIFEXITED(status)) {
+										printf("make programme terminé avec code %d\n", WEXITSTATUS(status));
+									}
+								}
+								pid = fork();
+								*/
+								if (pid == 0) {
+    									char *args[] = {"./programme", NULL};
+    									execvp(args[0], args);
+    									perror("execvp a échoué"); // affichera seulement si execvp échoue
+    									exit(1);
+								} else if (pid > 0) {
+    									int status;
+   									waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
+    									if (WIFEXITED(status)) {
+        								printf("programme terminé avec code %d\n", WEXITSTATUS(status));
+    									}
+								}
+							}
+
+						}
+						else if (b == 3)
+						{
+							if (open_file("output.txt") == 0)
+								system("xdg-open output.txt");
+						}
+						else if (b == 4)
+						{
+							if (open_file("word.txt") == 0)
+								system("xdg-open word.txt");
 						}
 						
 					}
