@@ -1,7 +1,6 @@
 #include "UI.h"
 
-void Image(SDL_Renderer* renderer, char* image, int x, int y,
-           TextManager* textmanager, Button* button, int index, float mult, int nbtitle);
+
 void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **texture)
 {
 	int Video = SDL_Init(SDL_INIT_VIDEO);
@@ -248,13 +247,15 @@ void principal(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture,
 	int running = 1;
 	RenderCopyFunction(renderer, &page.textmanager[0]);
 	char* im = malloc(sizeof(char*));
+	SDL_RenderPresent(renderer);
 	while(running == 1)
 	{	
 		running = Event_Handler(renderer, &page, &i, &im);
-		SDL_RenderPresent(renderer);
+		//SDL_RenderPresent(renderer);
 		//if (i == 4)
 			//printf("%d",page.button[4].difficulte[7]);
 	}
+	SDL_RenderClear(renderer);
 	DestroyTextures(&page.textmanager[0]);
 	DestroyTextures(&page.textmanager[1]);
 	DestroyTextures(&page.textmanager[2]);
@@ -387,7 +388,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
 							*i = 0;
 					}
 					SDL_RenderClear(renderer);
-					SDL_RenderPresent(renderer);
+					//SDL_RenderPresent(renderer);
 					//Image(renderer, load, 140, 350, &page.textmanager[4], &page.button[4], 0, 1);
 					RenderCopyFunction(renderer, &page->textmanager[*i]);
 				}

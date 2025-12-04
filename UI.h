@@ -30,3 +30,6 @@ typedef struct {
 
 void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **texture);
 int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** im);
+void title(SDL_Renderer *renderer, char* phrase, int x, int y, TextManager* textmanager, int mult);
+void principal(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture, Page page);
+void Image(SDL_Renderer* renderer, char* image, int x, int y, TextManager* textmanager, Button* button, int index, float mult, int nbtitle);
