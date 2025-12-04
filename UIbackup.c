@@ -68,13 +68,21 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	Image(*renderer, "images2/level_3_image_2.png", screen_w * 0.6, 280, &page.textmanager[3], &page.button[3], 2, 1, 0);
 	
 	Image(*renderer, "images2/Gemini4.png", screen_w - 300, 00, &page.textmanager[4], &page.button[4], 0, 1, 0);
+	//printf("%d\n-1",page.textmanager[4].count);
 	Image(*renderer, "images2/Pret2.png", 50, 50, &page.textmanager[4], &page.button[4],1,1, 0);
+	//printf("%d\n-2",page.textmanager[4].count);
 	Image(*renderer, "images2/reseau.png", 50, 50 + 160, &page.textmanager[4], &page.button[4],2,1, 0);
+	//printf("%d\n-3",page.textmanager[4].count);
 	Image(*renderer, "images2/grid.png", 50, 50 + 160 * 2, &page.textmanager[4], &page.button[4],3,1, 0);
+	//printf("%d\n-4",page.textmanager[4].count);
 	Image(*renderer, "images2/lmots.png", 50, 50 + 160 * 3, &page.textmanager[4], &page.button[4],4,1, 0);
+	//printf("%d\n-5",page.textmanager[4].count);
 	Image(*renderer, "images2/affichage.png", 50, 50 + 160 * 4, &page.textmanager[4], &page.button[4],5,1, 0);
+	//printf("%d\n-6",page.textmanager[4].count);
 	Image(*renderer, "images2/save.png", 50, 50 + 160 * 5, &page.textmanager[4], &page.button[4],6,1, 0);
+	//printf("%d\n-7",page.textmanager[4].count);
 	title(*renderer, "Image initiale :", screen_w / 2 + 50, 150, &page.textmanager[4], 1);
+	//printf("%d\n-8",page.textmanager[4].count);
 	
 	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[5], &page.button[5], 0, 1, 0);
 	title(*renderer, "PRETRAITEMENT DE L'IMAGE", screen_w / 2 - 280, 120, &page.textmanager[5], 1);
@@ -112,11 +120,26 @@ void AddTexture(TextManager* tm, SDL_Texture* tex, SDL_Rect rect)
         tm->rects = newRects;
         tm->capacity = new_capacity;
     }
+    //printf("%d\n",tm->count);
     tm->Tlist[tm->count] = tex;
     tm->rects[tm->count] = rect;
     tm->count++;
 }
 
+/*
+void AddTexture(TextManager* textmanager, SDL_Texture* tex)
+{
+    if (textmanager->count >= textmanager->capacity) {
+        if (textmanager->capacity == 0) {
+            textmanager->capacity = 4;
+        } else {
+            textmanager->capacity *= 2;
+        }
+        textmanager->Tlist = realloc(textmanager->Tlist, textmanager->capacity * sizeof(*textmanager->Tlist));
+    }
+    textmanager->Tlist[textmanager->count++] = tex;
+}
+*/
 
 void DestroyTextures(TextManager* textmanager)
 {
@@ -159,8 +182,10 @@ void Image(SDL_Renderer *renderer, char* image, int x, int y,
     rect.h = (int)(rect.h * mult);
     rect.x = x;
     rect.y = y;
+   // printf("%d\n",textmanager->count);
     if (index !=0 && button->difficulte[index] == index)
     {
+	    //printf("%d\n",textmanager->count);
 	    SDL_DestroyTexture(textmanager->Tlist[index + nbtitle/*index + (textmanager->count - button->count)*/]);
 	    textmanager->Tlist[index + nbtitle/*index + (textmanager->count - button->count)*/] = texture;
             textmanager->rects[index + nbtitle/*index + (textmanager->count - button->count)*/] = rect;
@@ -170,9 +195,31 @@ void Image(SDL_Renderer *renderer, char* image, int x, int y,
     button->rect[index] = rect;
     button->difficulte[index] = index;
     button->count = button->count + 1;
+    //printf("%d\n",index);
     AddTexture(textmanager, texture, rect);
 }
-
+/*
+SDL_Rect Image(SDL_Renderer *renderer, char* image, int x, int y, TextManager* textmanager, Button* button, int index)
+{
+	//IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+	SDL_Surface* surface = IMG_Load(image);
+	if(surface == NULL)
+		printf("NONZD11234");
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+	SDL_FreeSurface(surface);  // on peut libérer la surface après
+	SDL_Rect rect;
+	SDL_QueryTexture(texture, NULL, NULL, &rect.w, &rect.h);
+	rect.w /= 2;
+	rect.h /= 2;
+	rect.x = x; (1000 / 3) - rect.w / 2/   // centrer horizontalement
+	rect.y = y;
+	//button->rect[index] = rect;
+	//button->difficulte[index] = index;
+	//SDL_RenderCopy(renderer, texture, NULL, &rect);
+	AddTexture(textmanager ,texture, rect);
+	return rect;
+}
+*/
 
 void title(SDL_Renderer *renderer, char* phrase, int x, int y, TextManager* textmanager, int mult)
 {
@@ -187,6 +234,7 @@ void title(SDL_Renderer *renderer, char* phrase, int x, int y, TextManager* text
     	rect.y = y;
 	rect.w *= mult;
 	rect.h *= mult;
+	//SDL_RenderCopy(renderer, titre, NULL, &rect);
 	TTF_CloseFont(font);
 	AddTexture(textmanager, titre, rect);
         SDL_Delay(16);
@@ -203,6 +251,9 @@ void principal(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture,
 	while(running == 1)
 	{	
 		running = Event_Handler(renderer, &page, &i, &im);
+		//SDL_RenderPresent(renderer);
+		//if (i == 4)
+			//printf("%d",page.button[4].difficulte[7]);
 	}
 	SDL_RenderClear(renderer);
 	DestroyTextures(&page.textmanager[0]);
@@ -249,6 +300,8 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
 				int my = event.button.y;
 				//int index = *i;
 				char b = Button_Clicked(&page->button[*i], mx, my);
+				//printf("%d - %d\n",b,*i);
+				//char* load = "";
 				if (b != -1)
 				{
 					if (*i == 0)
@@ -268,14 +321,10 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
 						else if (*i == 1)
 						{
 							if (b == 1)
-								{
-									load = "images2/level_1_image_1.png";    //strcpy(load,"images2/level_1_image_2.png");
-									*currim = "images/level_1_image_1.png";
+								{load = "images2/level_1_image_1.png";    //strcpy(load,"images2/level_1_image_2.png");
 								}
 							else	
-								{
-									load = "images2/level_1_image_2.png";    //strcpy(load,"images2/level_1_image_2.png");
-									*currim = "images/level_1_image_2.png";
+								{load = "images2/level_1_image_2.png";    //strcpy(load,"images2/level_1_image_2.png");
 								}
 							*i = 4;
 							SDL_RenderClear(renderer);
@@ -284,15 +333,9 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
 						else if (*i == 2)
 						{
 							if (b == 2)
-							{
-								load = "images2/level_2_image_2.png";
-								*currim = "images/level_2_image_2.png";
-							}
+							{load = "images2/level_2_image_2.png";}
 							else
-							{
-								load = "images2/level_2_image_1.png";
-								*currim = "images/level_2_image_1.png";
-							}
+							{load = "images2/level_2_image_1.png";}
 							*i = 4;
 							SDL_RenderClear(renderer);
 							Image(renderer, load, 850, 300, &page->textmanager[4], &page->button[4], 7, 1,1);
@@ -300,20 +343,15 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
 						else if (*i == 3)
 						{
 							if (b == 1)
-								{
-									load = "images2/level_3_image_1.png";
-									*currim = "images/level_3_image_1.png";
-								}
+								load = "images2/level_3_image_1.png";
 							else
-								{
-									load = "images2/level_3_image_2.png";
-									*currim = "images/level_3_image_2.png";
-								}
+								load = "images2/level_3_image_2.png";
 							*i = 4;
 							SDL_RenderClear(renderer);
 							Image(renderer, load, 850, 300, &page->textmanager[4], &page->button[4], 7, 1,1);
 						}
-						//printf("%d\n",page->textmanager[4].count);
+						printf("%d\n",page->textmanager[4].count);
+						*currim = load;
 					}
 					else if (*i == 4)
 					{
@@ -350,10 +388,9 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
 							*i = 0;
 					}
 					SDL_RenderClear(renderer);
-					SDL_RenderPresent(renderer);
+					//SDL_RenderPresent(renderer);
 					//Image(renderer, load, 140, 350, &page.textmanager[4], &page.button[4], 0, 1);
 					RenderCopyFunction(renderer, &page->textmanager[*i]);
-					SDL_RenderPresent(renderer);
 				}
 				break;
 		}
