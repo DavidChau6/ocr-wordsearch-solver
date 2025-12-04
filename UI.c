@@ -76,8 +76,10 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	Image(*renderer, "images2/save.png", 50, 50 + 160 * 5, &page.textmanager[4], &page.button[4],6,1, 0);
 	title(*renderer, "Image initiale :", screen_w / 2 + 50, 150, &page.textmanager[4], 1);
 	
+	title(*renderer, "PRETRAITEMENT DE L'IMAGE",  screen_w / 2 - 200, 100, &page.textmanager[5], 1);
 	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[5], &page.button[5], 0, 1, 0);
-	title(*renderer, "PRETRAITEMENT DE L'IMAGE", screen_w / 2 - 280, 120, &page.textmanager[5], 1);
+	Image(*renderer, "images2/Next.png", screen_w / 2, 800, &page.textmanager[5], &page.button[5], 1, 1, 0);
+	Image(*renderer, "images2/Next.png", 800, 200, &page.textmanager[5], &page.button[5], 2, 0.6,0);
 	pid_t pid = fork();
 
 	if (pid == 0) {
@@ -200,9 +202,10 @@ void principal(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture,
 	RenderCopyFunction(renderer, &page.textmanager[0]);
 	char* im = malloc(sizeof(char*));
 	SDL_RenderPresent(renderer);
+	int n_im = 1;
 	while(running == 1)
 	{	
-		running = Event_Handler(renderer, &page, &i, &im);
+		running = Event_Handler(renderer, &page, &i, &im, &n_im);
 	}
 	SDL_RenderClear(renderer);
 	DestroyTextures(&page.textmanager[0]);
@@ -227,7 +230,7 @@ int Button_Clicked(Button* b, int mx, int my)
 }
 
 
-int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
+int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int* n_im)
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -325,29 +328,46 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim)
 						{
 							*i = 5;
 							//A REVOIR -> Fuite de données
-							pid_t pid = fork();
-							if (pid == 0) {
-    								char *args[] = {"./grid_extract", *currim, NULL};
-   								 execvp(args[0], args);
-    								perror("execvp a échoué"); // affichera seulement si execvp échoue
-    								exit(1);
-							} else if (pid > 0) {
-    								int status;
-    								waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
-    								if (WIFEXITED(status)) {
-        								printf("grid_extract terminé avec code %d\n", WEXITSTATUS(status));
-   								}
+							if (*n_im == 1)
+							{
+								pid_t pid = fork();
+								if (pid == 0) {
+    									char *args[] = {"./grid_extract", *currim, NULL};
+   									 execvp(args[0], args);
+    									perror("execvp a échoué"); // affichera seulement si execvp échoue
+    									exit(1);
+								} else if (pid > 0) {
+    									int status;
+    									waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
+    									if (WIFEXITED(status)) {
+        									printf("grid_extract terminé avec code %d\n", WEXITSTATUS(status));
+   									}
+								}
+								Image(renderer, "step1_loaded.bmp", 800, 200, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+								*n_im = 2;
 							}
-							Image(renderer, "step1_loaded.bmp", 400, 200, &page->textmanager[5], &page->button[5], 2, 0.6,0);
-							Image(renderer, "step2_no_bruit.bmp", 1100, 200, &page->textmanager[5], &page->button[5], 3, 0.6,0);
-							Image(renderer, "step3_rotated.bmp", 400, 600, &page->textmanager[5], &page->button[5], 4, 0.6,0);
-							Image(renderer, "step4_binary.bmp", 1100, 600, &page->textmanager[5], &page->button[5], 5, 0.6,0);
 						}
+						
 					}
 					else if (*i == 5)
 					{
 						if (b == 0)
+						{
 							*i = 0;
+							*n_im = 1;
+						}
+						else if (b == 1)
+						{
+							if (*n_im % 4 == 1)
+								Image(renderer, "step1_loaded.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+							else if (*n_im % 4 == 2)
+								Image(renderer, "step2_no_bruit.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+							else if (*n_im % 4 == 3)
+								Image(renderer, "step3_rotated.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+							else
+								Image(renderer, "step4_binary.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+							*n_im += 1;
+						}
 					}
 					SDL_RenderClear(renderer);
 					SDL_RenderPresent(renderer);
