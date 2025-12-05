@@ -102,8 +102,7 @@ int main()
                 fprintf(out, "\n");
                 r++;
         }
-
-        fclose(out);
+	fclose(out);
         FILE* word = fopen("word.txt", "w");
         if (!word)
         {
@@ -132,7 +131,7 @@ int main()
                         free(img);
 
                         printf("%s -> %c\n", fname, letter);
-                        fprintf(out, "%c", letter);
+                        fprintf(word, "%c", letter);
 
                         c++;
                         ligne_existante = 1;
@@ -143,7 +142,6 @@ int main()
                 fprintf(word, "\n");
                 s++;
         }
-
         fclose(word);
 
         SDL_Quit();
