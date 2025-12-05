@@ -158,10 +158,18 @@ void Image(SDL_Renderer *renderer, char* image, int x, int y,
 
     SDL_Rect rect;
     SDL_QueryTexture(texture, NULL, NULL, &rect.w, &rect.h);
-    rect.w = (int)(rect.w * mult);
-    rect.h = (int)(rect.h * mult);
-    rect.x = x;
-    rect.y = y;
+	if (mult == 3)
+	{
+		rect.w = (int)(500);
+		rect.h = (int)(500);
+	}
+	else
+    {
+		rect.w = (int)(rect.w * mult);
+    	rect.h = (int)(rect.h * mult);
+	}
+	rect.x = x;
+	rect.y = y;
     if (index !=0 && button->difficulte[index] == index)
     {
 	    SDL_DestroyTexture(textmanager->Tlist[index + nbtitle/*index + (textmanager->count - button->count)*/]);
@@ -294,7 +302,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 850, 300, &page->textmanager[4], &page->button[4], 7, 1,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
 						}
 						else if (*i == 2)
 						{
@@ -310,7 +318,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 850, 300, &page->textmanager[4], &page->button[4], 7, 1,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
 						}
 						else if (*i == 3)
 						{
@@ -326,7 +334,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 850, 300, &page->textmanager[4], &page->button[4], 7, 1,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
 						}
 						//printf("%d\n",page->textmanager[4].count);
 					}
@@ -359,7 +367,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
         									printf("grid_extract terminé avec code %d\n", WEXITSTATUS(status));
    									}
 								}
-								Image(renderer, "step1_loaded.bmp", 800, 200, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+								Image(renderer, "step1_loaded.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 								*n_im = 2;
 							}
 						}
@@ -408,6 +416,16 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							if (open_file("word.txt") == 0)
 								system("xdg-open word.txt");
 						}
+						else if (b == 5)
+						{
+
+						}
+						else if (b == 6)
+						{
+							char save[100];
+							sprintf(save,"cp %s %s",*currim, "save_image.png");
+							system(save);
+						}
 						
 					}
 					else if (*i == 5)
@@ -420,13 +438,13 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 						else if (b == 1)
 						{
 							if (*n_im % 4 == 1)
-								Image(renderer, "step1_loaded.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+								Image(renderer, "step1_loaded.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							else if (*n_im % 4 == 2)
-								Image(renderer, "step2_no_bruit.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+								Image(renderer, "step2_no_bruit.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							else if (*n_im % 4 == 3)
-								Image(renderer, "step3_rotated.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+								Image(renderer, "step3_rotated.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							else
-								Image(renderer, "step4_binary.bmp", 800, 350, &page->textmanager[5], &page->button[5], 2, 0.6,1);
+								Image(renderer, "step4_binary.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							*n_im += 1;
 						}
 					}
