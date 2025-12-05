@@ -26,7 +26,7 @@ TARGET_PROG= programme
 PROG_SRCS = programme.c reseaux.c
 PROG_OBJS=${PROG_SRCS:.c=.o}
 
-all: $(TARGET_GRID) $(TARGET_SOLVER) $(TARGET_XOR)
+all: $(TARGET_GRID) $(TARGET_SOLVER) $(TARGET_XOR) $(TARGET_UI) $(TARGET_PROG)
 
 $(TARGET_GRID): $(GRID_OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET_GRID) $(GRID_OBJS) $(SDL_LIBS) $(MATH_LIB)
@@ -47,10 +47,11 @@ $(TARGET_PROG): $(PROG_OBJS)
 	$(CC) $(CFLAGS) $(SDL_CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(GRID_OBJS) $(TARGET_GRID) $(SOLVER_OBJS) $(TARGET_SOLVER) $(XOR_OBJS) $(TARGET_XOR) $(UI_OBJS) $(TARGET_UI)
+	rm -f $(GRID_OBJS) $(TARGET_GRID) $(SOLVER_OBJS) $(TARGET_SOLVER) $(XOR_OBJS) $(TARGET_XOR) $(UI_OBJS) $(TARGET_UI) $(PROG_OBJS) $(TARGET_PROG) 
 
 extra-clean:
 	rm -f grid_r*.bmp word_*.bmp grid*.bmp words*.bmp step*.bmp mask*.bmp
 
 .PHONY: all clean extra-clean
+
 
