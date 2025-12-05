@@ -22,6 +22,10 @@ TARGET_UI= test
 UI_SRCS=main.c UI.c
 UI_OBJS=${UI_SRCS:.c=.o}
 
+TARGET_PROG= programme
+PROG_SRCS = programme.c reseaux.c
+PROG_OBJS=${PROG_SRCS:.c=.o}
+
 all: $(TARGET_GRID) $(TARGET_SOLVER) $(TARGET_XOR)
 
 $(TARGET_GRID): $(GRID_OBJS)
@@ -36,6 +40,9 @@ $(TARGET_XOR): $(XOR_OBJS)
 $(TARGET_UI): $(UI_OBJS)
 	$(CC) $(LDFLAGS) $(UI_OBJS) $(SDL_LIBS) -o $@
 
+$(TARGET_PROG): $(PROG_OBJS)
+	$(CC) $(LDFLAGS) -o $(TARGET_PROG) $(PROG_OBJS) $(SDL_LIBS) $(MATH_LIB)
+
 %.o: %.c
 	$(CC) $(CFLAGS) $(SDL_CFLAGS) -c $< -o $@
 
@@ -46,3 +53,4 @@ extra-clean:
 	rm -f grid_r*.bmp word_*.bmp grid*.bmp words*.bmp step*.bmp mask*.bmp
 
 .PHONY: all clean extra-clean
+
