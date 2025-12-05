@@ -353,6 +353,10 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							if (*n_im == 1)
 							{
 								traite = 1;
+								float angle = 0.0f;
+								SDL_Texture* wheel = IMG_LoadTexture(renderer, "tesr.png");
+								if (wheel == NULL)
+									printf("AIE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 								pid_t pid = fork();
 								if (pid == 0) {
     									char *args[] = {"./grid_extract", *currim, NULL};
@@ -361,10 +365,24 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
     									exit(1);
 								} else if (pid > 0) {
     									int status;
-    									waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
+    									while (waitpid(pid, &status, WNOHANG) == 0)  // attend que grid_extract finisse vraiment
+									{
+										angle += 5.0f;
+										if (angle >= 360.0f) angle = 0.0f;
+										SDL_RenderClear(renderer);
+										int w, h;
+										SDL_QueryTexture(wheel, NULL, NULL, &w, &h);
+										SDL_Rect dst = { 400, 500, w, h };
+										SDL_RenderCopyEx(renderer, wheel, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
+										RenderCopyFunction(renderer, &page->textmanager[*i - 1]);
+										SDL_RenderPresent(renderer);
+										SDL_Delay(16);
+									}
+									SDL_DestroyTexture(wheel);
     									if (WIFEXITED(status)) {
         									printf("grid_extract terminé avec code %d\n", WEXITSTATUS(status));
    									}
+
 								}
 								Image(renderer, "step1_loaded.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 								*n_im = 2;
