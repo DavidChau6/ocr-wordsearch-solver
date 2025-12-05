@@ -18,7 +18,7 @@ TARGET_XOR = xor
 XOR_SRCS = xor.c
 XOR_OBJS = $(XOR_SRCS:.c=.o)
 
-TARGET_UI= test
+TARGET_UI= interface
 UI_SRCS=main.c UI.c
 UI_OBJS=${UI_SRCS:.c=.o}
 
