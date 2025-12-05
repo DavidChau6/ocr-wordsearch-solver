@@ -354,9 +354,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							{
 								traite = 1;
 								float angle = 0.0f;
-								SDL_Texture* wheel = IMG_LoadTexture(renderer, "tesr.png");
-								if (wheel == NULL)
-									printf("AIE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+								SDL_Texture* wheel = IMG_LoadTexture(renderer, "images2/testr.png");
 								pid_t pid = fork();
 								if (pid == 0) {
     									char *args[] = {"./grid_extract", *currim, NULL};
@@ -372,7 +370,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 										SDL_RenderClear(renderer);
 										int w, h;
 										SDL_QueryTexture(wheel, NULL, NULL, &w, &h);
-										SDL_Rect dst = { 400, 500, w, h };
+										SDL_Rect dst = { 540, 50, w * 0.90, h * 0.90};
 										SDL_RenderCopyEx(renderer, wheel, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
 										RenderCopyFunction(renderer, &page->textmanager[*i - 1]);
 										SDL_RenderPresent(renderer);
@@ -415,7 +413,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
     									exit(1);
 								} else if (pid > 0) {
     									int status;
-   									waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
+   										waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
     									if (WIFEXITED(status)) {
         								printf("programme terminé avec code %d\n", WEXITSTATUS(status));
     									}
@@ -430,8 +428,21 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 						}
 						else if (b == 4)
 						{
-							if (open_file("word.txt") == 0)
+							//if (open_file("word.txt") == 0)
+							if (access("word.txt", F_OK) == 0)
 								system("xdg-open word.txt");
+							else
+								{
+									title(renderer, "Impossible", 540, 50, &page->textmanager[4], 1);
+									SDL_RenderClear(renderer);
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+									sleep(3);
+									SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count]);
+									SDL_RenderClear(renderer);
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+								}
 						}
 						else if (b == 5)
 						{
