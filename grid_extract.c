@@ -32,48 +32,86 @@ static void save_region(SDL_Surface *img, int x0, int y0, int x1, int y1,
     SDL_FreeSurface(out);
     printf("Area saved : %s (%dx%d)\n", name, w, h);
 }
+static inline Uint32 get_pixel_raw(SDL_Surface *surf, int x, int y)
+{
+    Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * surf->format->BytesPerPixel;
+    switch (surf->format->BytesPerPixel) {
+        case 1: return *p;
+        case 2: return *(Uint16 *)p;
+        case 3:
+            if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+                return p[0]<<16 | p[1]<<8 | p[2];
+            else
+                return p[0] | p[1]<<8 | p[2]<<16;
+        case 4: return *(Uint32 *)p;
+    }
+    return 0;
+}
+
+static inline void set_pixel_raw(SDL_Surface *surf, int x, int y, Uint32 val)
+{
+    Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * surf->format->BytesPerPixel;
+    switch (surf->format->BytesPerPixel) {
+        case 1: *p = (Uint8)val; break;
+        case 2: *(Uint16 *)p = (Uint16)val; break;
+        case 3:
+            if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+                p[0] = (val >> 16) & 0xFF;
+                p[1] = (val >> 8) & 0xFF;
+                p[2] = val & 0xFF;
+            } else {
+                p[0] = val & 0xFF;
+                p[1] = (val >> 8) & 0xFF;
+                p[2] = (val >> 16) & 0xFF;
+            }
+            break;
+        case 4: *(Uint32 *)p = val; break;
+    }
+}
+
+static inline Uint8 get_gray(SDL_Surface *surf, int x, int y)
+{
+    Uint32 raw = get_pixel_raw(surf, x, y);
+    Uint8 r, g, b, a;
+    SDL_GetRGBA(raw, surf->format, &r, &g, &b, &a);
+    return (Uint8)((0.299 * r) + (0.587 * g) + (0.114 * b));
+}
 
 void color_to_mask(SDL_Surface *img, Uint8 *mask)
 {
     int w = img->w, h = img->h;
-    Uint32 *pix = img->pixels;
-    long rs = 0, gs = 0, bs = 0, n = 0;
+
+    int hist[256] = {0};
+    int total = w * h;
 
     for (int y = 0; y < h; y++)
         for (int x = 0; x < w; x++)
         {
-            Uint8 r, g, b;
-            SDL_GetRGB(pix[y * w + x], img->format, &r, &g, &b);
-            rs += r;
-            gs += g;
-            bs += b;
-            n++;
+            Uint8 gray = get_gray(img, x, y);
+            hist[gray]++;
         }
 
-    Uint8 br = rs / n, bg = gs / n, bb = bs / n;
-    int bg_lum = (br + bg + bb) / 3;
-
-    for (int y = 0; y < h; y++)
-        for (int x = 0; x < w; x++)
-        {
-            Uint8 r, g, b;
-            SDL_GetRGB(pix[y * w + x], img->format, &r, &g, &b);
-            int lum = (r + g + b) / 3;
-            int diff = abs(r - br) + abs(g - bg) + abs(b - bb);
-            mask[y * w + x] = (diff > 50 || lum < bg_lum - 40) ? 1 : 0;
-        }
+    int threshold = 150;
 
     int sum = 0;
-    for (int i = 0; i < w * h; i++)
-        sum += mask[i];
-    double ratio = (double)sum / (w * h);
-    if (ratio > 0.5)
+    for (int t = 255; t >= 80; t--)
     {
-        printf("Inversion of the colors\n");
-        for (int i = 0; i < w * h; i++)
-            mask[i] = !mask[i];
+        sum += hist[t];
+        if (sum > total * 0.1)
+        {
+            threshold = t - 10;
+            break;
+        }
     }
+
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+        {
+            Uint8 gray = get_gray(img, x, y);
+            mask[y*w + x] = (gray < threshold) ? 1 : 0;
+        }
 }
+
 
 void detect_two_blocks(Uint8 *mask, int w, int h, int *gx0, int *gy0, int *gx1,
                        int *gy1, int *wx0, int *wy0, int *wx1, int *wy1)
@@ -279,50 +317,7 @@ void detect_two_blocks(Uint8 *mask, int w, int h, int *gx0, int *gy0, int *gx1,
     free(rowsum);
 }
 
-static inline Uint32 get_pixel_raw(SDL_Surface *surf, int x, int y)
-{
-    Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * surf->format->BytesPerPixel;
-    switch (surf->format->BytesPerPixel) {
-        case 1: return *p;
-        case 2: return *(Uint16 *)p;
-        case 3:
-            if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-                return p[0]<<16 | p[1]<<8 | p[2];
-            else
-                return p[0] | p[1]<<8 | p[2]<<16;
-        case 4: return *(Uint32 *)p;
-    }
-    return 0;
-}
 
-static inline void set_pixel_raw(SDL_Surface *surf, int x, int y, Uint32 val)
-{
-    Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * surf->format->BytesPerPixel;
-    switch (surf->format->BytesPerPixel) {
-        case 1: *p = (Uint8)val; break;
-        case 2: *(Uint16 *)p = (Uint16)val; break;
-        case 3:
-            if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-                p[0] = (val >> 16) & 0xFF;
-                p[1] = (val >> 8) & 0xFF;
-                p[2] = val & 0xFF;
-            } else {
-                p[0] = val & 0xFF;
-                p[1] = (val >> 8) & 0xFF;
-                p[2] = (val >> 16) & 0xFF;
-            }
-            break;
-        case 4: *(Uint32 *)p = val; break;
-    }
-}
-
-static inline Uint8 get_gray(SDL_Surface *surf, int x, int y)
-{
-    Uint32 raw = get_pixel_raw(surf, x, y);
-    Uint8 r, g, b, a;
-    SDL_GetRGBA(raw, surf->format, &r, &g, &b, &a);
-    return (Uint8)((0.299 * r) + (0.587 * g) + (0.114 * b));
-}
 
 void convert_to_grayscale(SDL_Surface* surface)
 {
@@ -930,6 +925,7 @@ int main(int argc, char **argv)
         SDL_Quit();
         return 1;
     }
+    
 
 
     SDL_Surface *converted =
