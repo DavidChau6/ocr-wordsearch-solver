@@ -45,29 +45,29 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	//title(renderer, "Moyen", 900, 250, &page.textmanager[0],1);
 	//title(renderer, "Facile", 300, 250, &page.textmanager[0],1);
 	//title(renderer, "Difficile", 1450, 250, &page.textmanager[0],1);
+	title(*renderer, "WORD SEARCH SOLVER", screen_w / 2 - 220, 80, &page.textmanager[0], 1);
 	Image(*renderer,"images2/Facile3.png", 90, 350, &page.textmanager[0], &page.button[0], 0, 1,0);
 	Image(*renderer,"images2/Moyen2.png", 690, 350, &page.textmanager[0], &page.button[0], 1, 1,0);
 	Image(*renderer,"images2/Difficile2.png", 1290, 355, &page.textmanager[0], &page.button[0], 2, 1,0);
-	title(*renderer, "WORD SEARCH SOLVER", screen_w / 2 - 220, 80, &page.textmanager[0], 1);
 
 	
-	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[1], &page.button[1], 0, 1, 0);
 	title(*renderer, "Choisir une image", screen_w / 2 - 320, 80, &page.textmanager[1], 2);
+	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[1], &page.button[1], 0, 1, 0);
 	Image(*renderer, "images2/level_1_image_1.png", screen_w * 0.12, 280, &page.textmanager[1], &page.button[1], 1, 1, 0);
 	Image(*renderer, "images2/level_1_image_2.png", screen_w * 0.55, 280, &page.textmanager[1], &page.button[1], 2, 1, 0);
 
-	
-	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[2], &page.button[2], 0, 1, 0);
 	title(*renderer, "Choisir une image", screen_w / 2 - 320, 80, &page.textmanager[2], 2);
+	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[2], &page.button[2], 0, 1, 0);
 	Image(*renderer, "images2/level_2_image_1.png", screen_w * 0.1, 280, &page.textmanager[2], &page.button[2], 1, 1, 0);
 	Image(*renderer, "images2/level_2_image_2.png", screen_w * 0.6, 280, &page.textmanager[2], &page.button[2], 2, 1, 0);
 	
 
-	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[3], &page.button[3], 0, 1, 0);
 	title(*renderer, "Choisir une image", screen_w / 2 - 320, 80, &page.textmanager[3], 2);
+	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[3], &page.button[3], 0, 1, 0);
 	Image(*renderer, "images2/level_3_image_1.png", screen_w * 0.1, 280, &page.textmanager[3], &page.button[3], 1, 1, 0);
 	Image(*renderer, "images2/level_3_image_2.png", screen_w * 0.6, 280, &page.textmanager[3], &page.button[3], 2, 1, 0);
 	
+	title(*renderer, "Image initiale :", screen_w / 2 + 50, 150, &page.textmanager[4], 1);
 	Image(*renderer, "images2/Gemini4.png", screen_w - 300, 00, &page.textmanager[4], &page.button[4], 0, 1, 0);
 	Image(*renderer, "images2/Pret2.png", 50, 50, &page.textmanager[4], &page.button[4],1,1, 0);
 	Image(*renderer, "images2/reseau.png", 50, 50 + 160, &page.textmanager[4], &page.button[4],2,1, 0);
@@ -75,7 +75,6 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	Image(*renderer, "images2/lmots.png", 50, 50 + 160 * 3, &page.textmanager[4], &page.button[4],4,1, 0);
 	Image(*renderer, "images2/affichage.png", 50, 50 + 160 * 4, &page.textmanager[4], &page.button[4],5,1, 0);
 	Image(*renderer, "images2/save.png", 50, 50 + 160 * 5, &page.textmanager[4], &page.button[4],6,1, 0);
-	title(*renderer, "Image initiale :", screen_w / 2 + 50, 150, &page.textmanager[4], 1);
 	
 	title(*renderer, "PRETRAITEMENT DE L'IMAGE",  screen_w / 2 - 200, 100, &page.textmanager[5], 1);
 	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[5], &page.button[5], 0, 1, 0);
@@ -172,9 +171,9 @@ void Image(SDL_Renderer *renderer, char* image, int x, int y,
 	rect.y = y;
     if (index !=0 && button->difficulte[index] == index)
     {
-	    SDL_DestroyTexture(textmanager->Tlist[index + nbtitle/*index + (textmanager->count - button->count)*/]);
-	    textmanager->Tlist[index + nbtitle/*index + (textmanager->count - button->count)*/] = texture;
-            textmanager->rects[index + nbtitle/*index + (textmanager->count - button->count)*/] = rect;
+	    SDL_DestroyTexture(textmanager->Tlist[index + (textmanager->count - button->count)]);
+	    textmanager->Tlist[index + (textmanager->count - button->count)] = texture;
+        textmanager->rects[index + (textmanager->count - button->count)] = rect;
 	    return;
     }
     // On remplit directement le bouton et TextManager
