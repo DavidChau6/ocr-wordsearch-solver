@@ -77,18 +77,19 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	Image(*renderer, "images2/affichage.png", 50, 100 + 180 * 4, &page.textmanager[4], &page.button[4],5,1, 0);
 	//Image(*renderer, "images2/save.png", 50, 50 + 160 * 5, &page.textmanager[4], &page.button[4],6,1, 0);
 	
-	title(*renderer, "PRETRAITEMENT DE L'IMAGE",  screen_w / 2 - 200, 100, &page.textmanager[5], 1);
+	title(*renderer, "PRETRAITEMENT DE L'IMAGE",  screen_w / 2 - 250, 100, &page.textmanager[5], 1);
 	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[5], &page.button[5], 0, 1, 0);
-	Image(*renderer, "images2/Next.png", screen_w / 2, 800, &page.textmanager[5], &page.button[5], 1, 1, 0);
+	Image(*renderer, "images2/Next.png", screen_w / 2 - 80, 800, &page.textmanager[5], &page.button[5], 1, 1, 0);
 	Image(*renderer, "images2/Next.png", 800, 200, &page.textmanager[5], &page.button[5], 2, 0.6,0);
-	pid_t pid = fork();
 
+	pid_t pid = fork();
 	if (pid == 0) {
    		char *args[] = {"make", "grid_extract", NULL};
     		execvp("make", args);
     		perror("execvp a échoué"); 
     		exit(1);
 	}
+
 	principal(*window,*renderer,*texture,page);
 }
 
@@ -147,6 +148,7 @@ void DestroyTextures(TextManager* textmanager)
 void Image(SDL_Renderer *renderer, char* image, int x, int y,
            TextManager* textmanager, Button* button, int index, float mult, int nbtitle)
 {
+	(void)nbtitle;
     SDL_Surface* surface = IMG_Load(image);
     if(!surface) {
         printf("Impossible de charger %s\n", image);
@@ -172,12 +174,14 @@ void Image(SDL_Renderer *renderer, char* image, int x, int y,
 	rect.y = y;
     if (index !=0 && button->difficulte[index] == index)
     {
+		/*
 	    if (strcmp("images2/level_3_image_1.png",image) == 0)
 	    {
 		    printf("%d\n",index);
 		    printf("%d\n",textmanager->count);
 		    printf("%d\n\n",button->count);
 	    }
+		*/
 	    SDL_DestroyTexture(textmanager->Tlist[index + (textmanager->count - button->count)]);
 	    textmanager->Tlist[index + (textmanager->count - button->count)] = texture;
         textmanager->rects[index + (textmanager->count - button->count)] = rect;
@@ -212,6 +216,8 @@ void title(SDL_Renderer *renderer, char* phrase, int x, int y, TextManager* text
 
 void principal(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture, Page page)
 {
+	(void)window;
+	(void)texture;
 	int i = 0;
 	int running = 1;
 	RenderCopyFunction(renderer, &page.textmanager[0]);
@@ -308,10 +314,11 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 6, 1.2,1);
 						}
 						else if (*i == 2)
 						{
+							//printf("ok1\n");
 							if (b == 2)
 							{
 								load = "images2/level_2_image_2.png";
@@ -324,7 +331,8 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 6, 1.2,1);
+							//printf("ok2\n");
 						}
 						else if (*i == 3)
 						{
@@ -340,7 +348,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 6, 1.2,1);
 						}
 						//printf("%d\n",page->textmanager[4].count);
 					}
@@ -348,6 +356,45 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 					{
 						if (b == 0)
 						{
+							if(access("programme",F_OK) == 0)
+							{
+								int status;
+								pid_t pid = fork();
+								if (pid == 0)
+								{
+									char* arg[] = {"make","clean",NULL};
+									execvp(arg[0],arg);
+									perror("execvp a échoué2");
+									exit(1);
+								}
+								else
+								{
+									waitpid(pid,&status, 0);
+								}
+								pid = fork();
+								if (pid == 0)
+								{
+									char* arg[] = {"make","extra-clean",NULL};
+									execvp(arg[0],arg);
+									perror("execvp a échoué2");
+									exit(1);
+								}
+								else
+								{
+									waitpid(pid, &status, 0);
+								}
+								pid = fork();
+								if (pid == 0) {
+									char *args[] = {"make", "grid_extract", NULL};
+									execvp("make", args);
+									perror("execvp a échoué"); 
+									exit(1);
+								}
+								else
+								{
+									waitpid(pid, &status, 0);									
+								}
+							}
 							*i = 0;
 							traite = 0;
 						}
@@ -384,12 +431,12 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 										SDL_Delay(16);
 									}
 									SDL_DestroyTexture(wheel);
-    									if (WIFEXITED(status)) {
-        									printf("grid_extract terminé avec code %d\n", WEXITSTATUS(status));
-   									}
+    									//if (WIFEXITED(status)) {
+        								//	printf("grid_extract terminé avec code %d\n", WEXITSTATUS(status));
+   									//}
 
 								}
-								Image(renderer, "step1_loaded.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
+								Image(renderer, "step1_loaded.bmp", 740, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 								*n_im = 2;
 							}
 						}
@@ -409,8 +456,8 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 									int status;
 									waitpid(pid, &status,0);
 								}
-								if(access("model.bin",F_OK) != 0)
-								{
+								//f(access("model.bin",F_OK) != 0)
+								//{
 									float angle = 0.0f;
 									SDL_Texture* wheel = IMG_LoadTexture(renderer, "images2/testr.png");
 									pid = fork();
@@ -437,12 +484,12 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 										}
 										//SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
 										//page->textmanager[4].count -= 1;
-										if (WIFEXITED(status)) {
-												printf("make programme terminé avec code %d\n", WEXITSTATUS(status));
-											}
+										//if (WIFEXITED(status)) {
+											//	printf("make programme terminé avec code %d\n", WEXITSTATUS(status));
+											//}
 										SDL_DestroyTexture(wheel);
 									}
-								}
+								//}
 								/*
 								pid = fork();
 								if (pid == 0) {
@@ -573,16 +620,17 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 						else if (b == 1)
 						{
 							if (*n_im % 4 == 1)
-								Image(renderer, "step1_loaded.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
+								Image(renderer, "step1_loaded.bmp", 740, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							else if (*n_im % 4 == 2)
-								Image(renderer, "step2_no_bruit.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
+								Image(renderer, "step2_no_bruit.bmp", 740, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							else if (*n_im % 4 == 3)
-								Image(renderer, "step3_rotated.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
+								Image(renderer, "step3_rotated.bmp", 740, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							else
-								Image(renderer, "step4_binary.bmp", 800, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
+								Image(renderer, "step4_binary.bmp", 740, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							*n_im += 1;
 						}
 					}
+					//printf("ok3\n");
 					SDL_RenderClear(renderer);
 					SDL_RenderPresent(renderer);
 					//Image(renderer, load, 140, 350, &page.textmanager[4], &page.button[4], 0, 1);
