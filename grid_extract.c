@@ -356,7 +356,7 @@ void color_to_mask2(SDL_Surface *img, Uint8 *mask)
     if (mean > 240)
         thr = (Uint8)(mean * 0.9);
     else
-        thr = (Uint8)(mean * 0.45); 
+        thr = (Uint8)(mean * 0.41); 
     for (int y = 0; y < h; y++)
         for (int x = 0; x < w; x++)
         {
