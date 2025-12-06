@@ -32,119 +32,149 @@ double* load_image(const char* filename, int* w, int* h)
         SDL_FreeSurface(img);
         return v;
 }
-
 int main()
 {
-        SDL_Init(SDL_INIT_VIDEO);
+    	SDL_Init(SDL_INIT_VIDEO);
 
-        if (!load_model("model.bin"))
-        {
-                printf("Aucun modèle trouvé. Entraînement...\n");
+    	if (!load_model("model.bin"))
+    	{
+        	printf("Aucun modèle trouvé. Entraînement...\n");
+        	init_network();
 
-                init_network();
+        	double* dataset[234];
+        	int labels[234];
+        	int w, h;
 
-                for (int epoch = 0; epoch < 1000; epoch++)
-                {
-                        for (int i = 1; i <= 156; i++)
-                        {
-                                char filename[128];
-                                sprintf(filename, "ref_test2/ref_%i.bmp", i);
-                                int w, h;
-                                double* img = load_image(filename, &w, &h);
-                                if (!img) continue;
-                                train_sample(img, (i-1)/6);
-                                free(img);
-                        }
-                }
-                save_model("model.bin");
-                printf("Entraînement terminé. Modèle sauvegardé.\n");
-        }
-        else
-        {
-                printf("Modèle chargé.\n");
-        }
-        FILE* out = fopen("output.txt", "w");
-        if (!out)
-        {
-                printf("Impossible de créer output.txt\n");
-                return 1;
-        }
+        	for (int i = 1; i <= 234; i++)
+        	{
+            		char filename[128];
+            		sprintf(filename, "ref/ref_%i.bmp", i);
 
-        int r = 0;
-        while (1)
-        {
-                int c = 0;
-                int ligne_existante = 0;
+            		dataset[i - 1] = load_image(filename, &w, &h);
+            		if (!dataset[i - 1])
+            		{
+                		printf("Impossible de charger %s\n", filename);
+                		continue;
+            		}
+	
+            		labels[i - 1] = (i - 1) / 9; 
+        	}
 
-                while (1)
-                {
-                        char fname[64];
-                        sprintf(fname, "grid_rot_r%02d_c%02d.bmp", r, c);
+        	const int EPOCHS = 300;  
 
-                        int w, h;
-                        if (!SDL_LoadBMP(fname)) break;
+        	for (int epoch = 0; epoch < EPOCHS; epoch++)
+        	{
+            		for (int i = 0; i < 234; i++)
+            		{
+                		if (dataset[i])
+                    		train_sample(dataset[i], labels[i]);
+            		}
 
-                        double* img = load_image(fname, &w, &h);
-                        if (!img) break;
+            		if (epoch % 10 == 0)
+                		printf("Époque %d / %d terminée.\n", epoch, EPOCHS);
+        	}
 
-                        char letter = predict_letter(img);
-                        free(img);
+        	save_model("model.bin");
+        	printf("Entraînement terminé. Modèle sauvegardé.\n");
 
-                        printf("%s -> %c\n", fname, letter);
-                        fprintf(out, "%c", letter);
+        	for (int i = 0; i < 234; i++)
+            		free(dataset[i]);
+    	}
+    	else
+    	{
+        	printf("Modèle chargé.\n");
+    	}
 
-                        c++;
-                        ligne_existante = 1;
-                }
 
-                if (!ligne_existante) break;
+    	FILE* out = fopen("output.txt", "w");
 
-                fprintf(out, "\n");
-                r++;
-        }
-	fclose(out);
-        FILE* word = fopen("word.txt", "w");
-        if (!word)
-        {
-                printf("Impossible de créer word.txt\n");
-                return 1;
-        }
+    	if (!out)
+    	{
+        	printf("Impossible de créer output.txt\n");
+        	return 1;
+    	}
 
-        int s = 0;
-        while (1)
-        {
-                int c = 0;
-                int ligne_existante = 0;
+    	int r = 0;
+    	while (1)
+    	{
+        	int c = 0;
+        	int ligne_existante = 0;
 
-                while (1)
-                {
-                        char fname[64];
-                        sprintf(fname, "word_rot_r%02d_c%02d.bmp", s, c);
+        	while (1)
+        	{
+            		char fname[64];
+            		sprintf(fname, "grid_rot_r%02d_c%02d.bmp", r, c);
 
-                        int w, h;
-                        if (!SDL_LoadBMP(fname)) break;
+            		SDL_Surface* check = SDL_LoadBMP(fname);
+            		if (!check) break;
+            		SDL_FreeSurface(check);
 
-                        double* img = load_image(fname, &w, &h);
-                        if (!img) break;
+            		int w, h;
+            		double* img = load_image(fname, &w, &h);
+            		if (!img) break;
 
-                        char letter = predict_letter(img);
-                        free(img);
+            		char letter = predict_letter(img);
+            		free(img);
 
-                        printf("%s -> %c\n", fname, letter);
-                        fprintf(word, "%c", letter);
+            		printf("%s -> %c\n", fname, letter);
+            		fprintf(out, "%c", letter);
 
-                        c++;
-                        ligne_existante = 1;
-                }
+            		c++;
+            		ligne_existante = 1;
+        	}
 
-                if (!ligne_existante) break;
+        	if (!ligne_existante) break;
 
-                fprintf(word, "\n");
-                s++;
-        }
-        fclose(word);
+        	fprintf(out, "\n");
+        	r++;
+    	}
+    	fclose(out);
 
-        SDL_Quit();
-        return 0;
+
+    	FILE* word = fopen("word.txt", "w");
+
+    	if (!word)
+    	{
+        	printf("Impossible de créer word.txt\n");
+        	return 1;
+    	}
+
+    	int s = 0;
+    	while (1)
+    	{
+        	int c = 0;
+        	int ligne_existante = 0;
+
+        	while (1)
+        	{
+            		char fname[64];
+            		sprintf(fname, "word_rot_r%02d_c%02d.bmp", s, c);
+
+            		SDL_Surface* check = SDL_LoadBMP(fname);
+            		if (!check) break;
+            		SDL_FreeSurface(check);
+
+            		int w, h;
+            		double* img = load_image(fname, &w, &h);
+            		if (!img) break;
+
+            		char letter = predict_letter(img);
+            		free(img);
+
+            		printf("%s -> %c\n", fname, letter);
+            		fprintf(word, "%c", letter);
+
+            		c++;
+            		ligne_existante = 1;
+        	}
+
+        	if (!ligne_existante) break;
+
+        	fprintf(word, "\n");
+        	s++;
+    	}
+    	fclose(word);
+
+    	SDL_Quit();
+    	return 0;
 }
-

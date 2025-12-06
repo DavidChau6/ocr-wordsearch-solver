@@ -2,7 +2,7 @@
 #define RESEAUX_H
 
 #define INPUT_SIZE 1600     // Exemple 40x40, change selon tes images
-#define HIDDEN_SIZE 128
+#define HIDDEN_SIZE 64
 #define OUTPUT_SIZE 26
 #define LEARNING_RATE 0.05
 extern double W1[HIDDEN_SIZE][INPUT_SIZE];
