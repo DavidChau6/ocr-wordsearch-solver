@@ -69,12 +69,13 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	
 	title(*renderer, "Image initiale :", screen_w / 2 + 50, 150, &page.textmanager[4], 1);
 	Image(*renderer, "images2/Gemini4.png", screen_w - 300, 00, &page.textmanager[4], &page.button[4], 0, 1, 0);
-	Image(*renderer, "images2/Pret2.png", 50, 50, &page.textmanager[4], &page.button[4],1,1, 0);
-	Image(*renderer, "images2/reseau.png", 50, 50 + 160, &page.textmanager[4], &page.button[4],2,1, 0);
-	Image(*renderer, "images2/grid.png", 50, 50 + 160 * 2, &page.textmanager[4], &page.button[4],3,1, 0);
-	Image(*renderer, "images2/lmots.png", 50, 50 + 160 * 3, &page.textmanager[4], &page.button[4],4,1, 0);
-	Image(*renderer, "images2/affichage.png", 50, 50 + 160 * 4, &page.textmanager[4], &page.button[4],5,1, 0);
-	Image(*renderer, "images2/save.png", 50, 50 + 160 * 5, &page.textmanager[4], &page.button[4],6,1, 0);
+	Image(*renderer, "images2/Pret2.png", 50, 100, &page.textmanager[4], &page.button[4],1,1, 0);
+	//Image(*renderer, "images2/Apprentissage.png", 50, 50 + 160, &page.textmanager[4], &page.button[4],2,1, 0);
+	Image(*renderer, "images2/reseau2.png", 50, 100 + 180 * 1, &page.textmanager[4], &page.button[4],2,1, 0);
+	Image(*renderer, "images2/grid.png", 50, 100 + 180 * 2, &page.textmanager[4], &page.button[4],3,1, 0);
+	Image(*renderer, "images2/lmots.png", 50, 100 + 180 * 3, &page.textmanager[4], &page.button[4],4,1, 0);
+	Image(*renderer, "images2/affichage.png", 50, 100 + 180 * 4, &page.textmanager[4], &page.button[4],5,1, 0);
+	//Image(*renderer, "images2/save.png", 50, 50 + 160 * 5, &page.textmanager[4], &page.button[4],6,1, 0);
 	
 	title(*renderer, "PRETRAITEMENT DE L'IMAGE",  screen_w / 2 - 200, 100, &page.textmanager[5], 1);
 	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[5], &page.button[5], 0, 1, 0);
@@ -163,14 +164,20 @@ void Image(SDL_Renderer *renderer, char* image, int x, int y,
 		rect.h = (int)(500);
 	}
 	else
-    {
+    	{
 		rect.w = (int)(rect.w * mult);
-    	rect.h = (int)(rect.h * mult);
+    		rect.h = (int)(rect.h * mult);
 	}
 	rect.x = x;
 	rect.y = y;
     if (index !=0 && button->difficulte[index] == index)
     {
+	    if (strcmp("images2/level_3_image_1.png",image) == 0)
+	    {
+		    printf("%d\n",index);
+		    printf("%d\n",textmanager->count);
+		    printf("%d\n\n",button->count);
+	    }
 	    SDL_DestroyTexture(textmanager->Tlist[index + (textmanager->count - button->count)]);
 	    textmanager->Tlist[index + (textmanager->count - button->count)] = texture;
         textmanager->rects[index + (textmanager->count - button->count)] = rect;
@@ -195,8 +202,8 @@ void title(SDL_Renderer *renderer, char* phrase, int x, int y, TextManager* text
     	SDL_QueryTexture(titre, NULL, NULL, &rect.w, &rect.h);
    	rect.x = x /*(x - rect.w) / 2*/;   // centrer horizontalement
     	rect.y = y;
-	rect.w *= mult;
-	rect.h *= mult;
+	rect.w = (int)(rect.w * mult);
+	rect.h = (int)(rect.h * mult);
 	TTF_CloseFont(font);
 	AddTexture(textmanager, titre, rect);
         SDL_Delay(16);
@@ -358,7 +365,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								pid_t pid = fork();
 								if (pid == 0) {
     									char *args[] = {"./grid_extract", *currim, NULL};
-   									 execvp(args[0], args);
+   										execvp(args[0], args);
     									perror("execvp a échoué"); // affichera seulement si execvp échoue
     									exit(1);
 								} else if (pid > 0) {
@@ -370,7 +377,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 										SDL_RenderClear(renderer);
 										int w, h;
 										SDL_QueryTexture(wheel, NULL, NULL, &w, &h);
-										SDL_Rect dst = { 540, 50, w * 0.90, h * 0.90};
+										SDL_Rect dst = { 540, 95, w * 0.90, h * 0.90};
 										SDL_RenderCopyEx(renderer, wheel, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
 										RenderCopyFunction(renderer, &page->textmanager[*i - 1]);
 										SDL_RenderPresent(renderer);
@@ -391,21 +398,53 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							if(traite == 1) 
 							{	
 								pid_t pid = fork();
-								/*
 								if (pid == 0) {
 									char *args[] = {"make", "programme", NULL};
 									execvp(args[0], args);
 									perror("execvp a échoué"); // affichera seulement si execvp échoue
 									exit(1);
-								} else if (pid > 0) {
+								}
+								else
+								{
 									int status;
-									waitpid(pid, &status, 0);  // attend que grid_extract finisse vraiment
-									if (WIFEXITED(status)) {
-										printf("make programme terminé avec code %d\n", WEXITSTATUS(status));
+									waitpid(pid, &status,0);
+								}
+								if(access("model.bin",F_OK) != 0)
+								{
+									float angle = 0.0f;
+									SDL_Texture* wheel = IMG_LoadTexture(renderer, "images2/testr.png");
+									pid = fork();
+									if (pid == 0) {
+										char *args[] = {"./programme", NULL};
+										execvp(args[0], args);
+										perror("execvp a échoué"); // affichera seulement si execvp échoue
+										exit(1);
+									} else if (pid > 0) {
+										int status;
+										//title(renderer, "Entrainement", 550, 230, &page->textmanager[4], 0.8);
+										while (waitpid(pid, &status, WNOHANG) == 0)  // attend que grid_extract finisse vraiment
+										{
+											angle += 5.0f;
+											if (angle >= 360.0f) angle = 0.0f;
+											SDL_RenderClear(renderer);
+											int w, h;
+											SDL_QueryTexture(wheel, NULL, NULL, &w, &h);
+											SDL_Rect dst = { 540, 270, w * 0.90, h * 0.90};
+											SDL_RenderCopyEx(renderer, wheel, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
+											RenderCopyFunction(renderer, &page->textmanager[*i]);
+											SDL_RenderPresent(renderer);
+											SDL_Delay(16);											
+										}
+										//SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+										//page->textmanager[4].count -= 1;
+										if (WIFEXITED(status)) {
+												printf("make programme terminé avec code %d\n", WEXITSTATUS(status));
+											}
+										SDL_DestroyTexture(wheel);
 									}
 								}
+								/*
 								pid = fork();
-								*/
 								if (pid == 0) {
     									char *args[] = {"./programme", NULL};
     									execvp(args[0], args);
@@ -418,38 +457,106 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
         								printf("programme terminé avec code %d\n", WEXITSTATUS(status));
     									}
 								}
+								*/
+								title(renderer, "Succes", 550, 320, &page->textmanager[4], 1);
+								SDL_RenderClear(renderer);
+								RenderCopyFunction(renderer, &page->textmanager[*i]);
+								SDL_RenderPresent(renderer);
+								sleep(2);
+								SDL_RenderClear(renderer);
+								SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+								page->textmanager[4].count -= 1;
+								RenderCopyFunction(renderer, &page->textmanager[*i]);
+								SDL_RenderPresent(renderer);
+							}
+							else
+							{
+								title(renderer, "Erreur", 550, 320, &page->textmanager[4], 1);
+								SDL_RenderClear(renderer);
+								RenderCopyFunction(renderer, &page->textmanager[*i]);
+								SDL_RenderPresent(renderer);
+								sleep(2);
+								SDL_RenderClear(renderer);
+								SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+								page->textmanager[4].count -= 1;
+								RenderCopyFunction(renderer, &page->textmanager[*i]);
+								SDL_RenderPresent(renderer);
 							}
 
 						}
 						else if (b == 3)
 						{
-							if (open_file("output.txt") == 0)
-								system("xdg-open output.txt");
+							if (access("output.txt", F_OK) == 0)
+								{
+									title(renderer, "Succes", 550, 500, &page->textmanager[4], 1);
+									SDL_RenderClear(renderer);
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+									sleep(2);
+									SDL_RenderClear(renderer);
+									SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+									page->textmanager[4].count -= 1;
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+									system("xdg-open output.txt");
+								}
+								else
+								{
+									title(renderer, "Erreur", 550, 500, &page->textmanager[4], 1);
+									SDL_RenderClear(renderer);
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+									sleep(2);
+									SDL_RenderClear(renderer);
+									SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+									page->textmanager[4].count -= 1;
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+								}
 						}
 						else if (b == 4)
 						{
 							//if (open_file("word.txt") == 0)
 							if (access("word.txt", F_OK) == 0)
-								system("xdg-open word.txt");
-							else
 								{
-									title(renderer, "Impossible", 540, 50, &page->textmanager[4], 1);
+									title(renderer, "Succes", 550, 675, &page->textmanager[4], 1);
 									SDL_RenderClear(renderer);
 									RenderCopyFunction(renderer, &page->textmanager[*i]);
 									SDL_RenderPresent(renderer);
-									sleep(3);
-									SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count]);
+									sleep(2);
 									SDL_RenderClear(renderer);
+									SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+									page->textmanager[4].count -= 1;
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+									system("xdg-open word.txt");
+								}
+							else
+								{
+									title(renderer, "Erreur", 550, 675, &page->textmanager[4], 1);
+									SDL_RenderClear(renderer);
+									RenderCopyFunction(renderer, &page->textmanager[*i]);
+									SDL_RenderPresent(renderer);
+									sleep(2);
+									SDL_RenderClear(renderer);
+									SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+									page->textmanager[4].count -= 1;
 									RenderCopyFunction(renderer, &page->textmanager[*i]);
 									SDL_RenderPresent(renderer);
 								}
 						}
 						else if (b == 5)
 						{
-
-						}
-						else if (b == 6)
-						{
+							title(renderer, "Succes", 550, 862, &page->textmanager[4], 1);
+							SDL_RenderClear(renderer);
+							RenderCopyFunction(renderer, &page->textmanager[*i]);
+							SDL_RenderPresent(renderer);
+							sleep(2);
+							SDL_RenderClear(renderer);
+							SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
+							page->textmanager[4].count -= 1;
+							RenderCopyFunction(renderer, &page->textmanager[*i]);
+							SDL_RenderPresent(renderer);
 							char save[100];
 							sprintf(save,"cp %s %s",*currim, "save_image.png");
 							system(save);
@@ -460,7 +567,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 					{
 						if (b == 0)
 						{
-							*i = 0;
+							*i = 4;
 							*n_im = 1;
 						}
 						else if (b == 1)
