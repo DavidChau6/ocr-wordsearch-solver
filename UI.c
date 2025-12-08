@@ -82,13 +82,31 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	Image(*renderer, "images2/Next.png", screen_w / 2 - 80, 800, &page.textmanager[5], &page.button[5], 1, 1, 0);
 	Image(*renderer, "images2/Next.png", 800, 200, &page.textmanager[5], &page.button[5], 2, 0.6,0);
 
+	title(*renderer, "RESULTAT",  screen_w / 2 - 200, 100, &page.textmanager[6], 2);
+	Image(*renderer, "images2/Gemini4.png", 0, 0, &page.textmanager[6], &page.button[6], 0, 1, 0);
+
 	pid_t pid = fork();
 	if (pid == 0) {
-   		char *args[] = {"make", "grid_extract", NULL};
+   		char *args[] = {"make", "all", NULL};
     		execvp("make", args);
     		perror("execvp a échoué"); 
     		exit(1);
 	}
+	else
+	{
+		waitpid(pid, NULL, 0);
+	}
+	pid = fork();
+	if (pid == 0) {
+   		char *args[] = {"make", "extra-clean", NULL};
+    		execvp("make", args);
+    		perror("execvp a échoué"); 
+    		exit(1);
+	}
+	else
+		{
+			waitpid(pid, NULL, 0);
+		}
 
 	principal(*window,*renderer,*texture,page);
 }
@@ -359,7 +377,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							if(access("programme",F_OK) == 0)
 							{
 								int status;
-								pid_t pid = fork();
+								/*pid_t pid = fork();
 								if (pid == 0)
 								{
 									char* arg[] = {"make","clean",NULL};
@@ -371,7 +389,8 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								{
 									waitpid(pid,&status, 0);
 								}
-								pid = fork();
+								*/
+								pid_t pid = fork();
 								if (pid == 0)
 								{
 									char* arg[] = {"make","extra-clean",NULL};
@@ -383,6 +402,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								{
 									waitpid(pid, &status, 0);
 								}
+								/*
 								pid = fork();
 								if (pid == 0) {
 									char *args[] = {"make", "grid_extract", NULL};
@@ -394,6 +414,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								{
 									waitpid(pid, &status, 0);									
 								}
+								*/
 							}
 							*i = 0;
 							traite = 0;
@@ -444,7 +465,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 						{
 							if(traite == 1) 
 							{	
-								pid_t pid = fork();
+								/*pid_t pid = fork();
 								if (pid == 0) {
 									char *args[] = {"make", "programme", NULL};
 									execvp(args[0], args);
@@ -456,11 +477,12 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 									int status;
 									waitpid(pid, &status,0);
 								}
+								*/
 								//f(access("model.bin",F_OK) != 0)
 								//{
 									float angle = 0.0f;
 									SDL_Texture* wheel = IMG_LoadTexture(renderer, "images2/testr.png");
-									pid = fork();
+									pid_t pid = fork();
 									if (pid == 0) {
 										char *args[] = {"./programme", NULL};
 										execvp(args[0], args);
@@ -515,6 +537,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								page->textmanager[4].count -= 1;
 								RenderCopyFunction(renderer, &page->textmanager[*i]);
 								SDL_RenderPresent(renderer);
+								traite = 2;
 							}
 							else
 							{
@@ -594,19 +617,37 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 						}
 						else if (b == 5)
 						{
-							title(renderer, "Succes", 550, 862, &page->textmanager[4], 1);
-							SDL_RenderClear(renderer);
-							RenderCopyFunction(renderer, &page->textmanager[*i]);
-							SDL_RenderPresent(renderer);
-							sleep(2);
-							SDL_RenderClear(renderer);
-							SDL_DestroyTexture(page->textmanager[4].Tlist[page->textmanager[4].count - 1]);
-							page->textmanager[4].count -= 1;
-							RenderCopyFunction(renderer, &page->textmanager[*i]);
-							SDL_RenderPresent(renderer);
-							char save[100];
-							sprintf(save,"cp %s %s",*currim, "save_image.png");
-							system(save);
+							if (traite == 2)
+							{
+								pid_t pid = fork();
+								if (pid == 0)
+								{
+									char *args[] = {"./resoudre", "word.txt", "output.txt", NULL};
+									execvp(args[0], args);
+									perror("execvp a échoué"); // affichera seulement si execvp échoue
+									exit(1);
+								}
+								else
+								{
+									int status;
+									waitpid(pid, &status,0);
+								}
+								pid = fork();
+								if (pid == 0)
+								{
+									char *args[] = {"./result", NULL};
+									execvp(args[0], args);
+									perror("execvp a échoué"); // affichera seulement si execvp échoue
+									exit(1);
+								}
+								else
+								{
+									int status;
+									waitpid(pid, &status,0);
+								}
+								Image(renderer, "grid_boxed.bmp", 675, 340, &page->textmanager[6], &page->button[6], 1, 1, 0);
+								*i = 6;
+							}
 						}
 						
 					}
@@ -629,6 +670,10 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								Image(renderer, "step4_binary.bmp", 740, 230, &page->textmanager[5], &page->button[5], 2, 3,1);
 							*n_im += 1;
 						}
+					}
+					else if (*i == 6)
+					{
+						*i = 4;
 					}
 					//printf("ok3\n");
 					SDL_RenderClear(renderer);
