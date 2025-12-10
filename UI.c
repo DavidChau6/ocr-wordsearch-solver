@@ -1,6 +1,7 @@
 #include "UI.h"
 
 int traite = 0;
+int fullscreen = 0;
 
 void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **texture)
 {
@@ -11,7 +12,7 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	SDL_GetCurrentDisplayMode(0, &dm);
 	int screen_w = dm.w;
 	int screen_h = dm.h;
-	*window = SDL_CreateWindow( "Projection",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,/*800*/screen_w,/*600*/screen_h,0);
+	*window = SDL_CreateWindow( "Projection",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,/*800*/screen_w,/*600*/screen_h,SDL_WINDOW_SHOWN);
 	if (window == NULL)
 		errx(EXIT_FAILURE,"F");
 	//SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -69,12 +70,13 @@ void initialize(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **text
 	
 	title(*renderer, "Image initiale :", screen_w / 2 + 50, 150, &page.textmanager[4], 1);
 	Image(*renderer, "images2/Gemini4.png", screen_w - 300, 00, &page.textmanager[4], &page.button[4], 0, 1, 0);
-	Image(*renderer, "images2/Pret2.png", 50, 100, &page.textmanager[4], &page.button[4],1,1, 0);
+	Image(*renderer, "images2/pret2.png", 50, 100, &page.textmanager[4], &page.button[4],1,1, 0);
 	//Image(*renderer, "images2/Apprentissage.png", 50, 50 + 160, &page.textmanager[4], &page.button[4],2,1, 0);
 	Image(*renderer, "images2/reseau2.png", 50, 100 + 180 * 1, &page.textmanager[4], &page.button[4],2,1, 0);
 	Image(*renderer, "images2/grid.png", 50, 100 + 180 * 2, &page.textmanager[4], &page.button[4],3,1, 0);
 	Image(*renderer, "images2/lmots.png", 50, 100 + 180 * 3, &page.textmanager[4], &page.button[4],4,1, 0);
 	Image(*renderer, "images2/affichage.png", 50, 100 + 180 * 4, &page.textmanager[4], &page.button[4],5,1, 0);
+	Image(*renderer, "images2/Union.png", 20, 20, &page.textmanager[4], &page.button[4],6,0.30, 0);
 	//Image(*renderer, "images2/save.png", 50, 50 + 160 * 5, &page.textmanager[4], &page.button[4],6,1, 0);
 	
 	title(*renderer, "PRETRAITEMENT DE L'IMAGE",  screen_w / 2 - 250, 100, &page.textmanager[5], 1);
@@ -244,7 +246,7 @@ void principal(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture,
 	int n_im = 1;
 	while(running == 1)
 	{	
-		running = Event_Handler(renderer, &page, &i, &im, &n_im);
+		running = Event_Handler(window,renderer, &page, &i, &im, &n_im);
 	}
 	SDL_RenderClear(renderer);
 	DestroyTextures(&page.textmanager[0]);
@@ -280,7 +282,7 @@ int open_file(const char *filename) {
     }
 }
 
-int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int* n_im)
+int Event_Handler(SDL_Window* window,SDL_Renderer *renderer, Page* page, int* i, char** currim, int* n_im)
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -332,7 +334,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 6, 1.2,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
 						}
 						else if (*i == 2)
 						{
@@ -349,7 +351,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 							}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 6, 1.2,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
 							//printf("ok2\n");
 						}
 						else if (*i == 3)
@@ -366,7 +368,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								}
 							*i = 4;
 							SDL_RenderClear(renderer);
-							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 6, 1.2,1);
+							Image(renderer, load, 800, 270, &page->textmanager[4], &page->button[4], 7, 1.2,1);
 						}
 						//printf("%d\n",page->textmanager[4].count);
 					}
@@ -649,6 +651,23 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 								*i = 6;
 							}
 						}
+						else if (b == 6)
+						{
+							if (fullscreen == 0)
+							{
+								SDL_SetWindowSize(window, 1000, 700);
+								fullscreen = 1;
+							}
+							else
+							{
+								SDL_DisplayMode dm;
+								SDL_GetCurrentDisplayMode(0, &dm);
+								int screen_w = dm.w;
+								int screen_h = dm.h;
+								SDL_SetWindowSize(window,screen_w,screen_h);
+								fullscreen = 0;
+							}
+						}
 						
 					}
 					else if (*i == 5)
@@ -677,7 +696,7 @@ int Event_Handler(SDL_Renderer *renderer, Page* page, int* i, char** currim, int
 					}
 					//printf("ok3\n");
 					SDL_RenderClear(renderer);
-					SDL_RenderPresent(renderer);
+					//SDL_RenderPresent(renderer);
 					//Image(renderer, load, 140, 350, &page.textmanager[4], &page.button[4], 0, 1);
 					RenderCopyFunction(renderer, &page->textmanager[*i]);
 					SDL_RenderPresent(renderer);
