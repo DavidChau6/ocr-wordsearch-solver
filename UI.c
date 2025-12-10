@@ -558,7 +558,7 @@ int Event_Handler(SDL_Window* window,SDL_Renderer *renderer, Page* page, int* i,
 						}
 						else if (b == 3)
 						{
-							if (access("output.txt", F_OK) == 0)
+							if (access("output.txt", F_OK) == 0 && fullscreen == 1)
 								{
 									title(renderer, "Succes", 550, 500, &page->textmanager[4], 1);
 									SDL_RenderClear(renderer);
@@ -570,7 +570,7 @@ int Event_Handler(SDL_Window* window,SDL_Renderer *renderer, Page* page, int* i,
 									page->textmanager[4].count -= 1;
 									RenderCopyFunction(renderer, &page->textmanager[*i]);
 									SDL_RenderPresent(renderer);
-									system("xdg-open output.txt");
+									system("geany output.txt");
 								}
 								else
 								{
@@ -589,7 +589,7 @@ int Event_Handler(SDL_Window* window,SDL_Renderer *renderer, Page* page, int* i,
 						else if (b == 4)
 						{
 							//if (open_file("word.txt") == 0)
-							if (access("word.txt", F_OK) == 0)
+							if (access("word.txt", F_OK) == 0 && fullscreen == 1)
 								{
 									title(renderer, "Succes", 550, 675, &page->textmanager[4], 1);
 									SDL_RenderClear(renderer);
@@ -601,7 +601,7 @@ int Event_Handler(SDL_Window* window,SDL_Renderer *renderer, Page* page, int* i,
 									page->textmanager[4].count -= 1;
 									RenderCopyFunction(renderer, &page->textmanager[*i]);
 									SDL_RenderPresent(renderer);
-									system("xdg-open word.txt");
+									system("geany word.txt");
 								}
 							else
 								{
@@ -655,7 +655,11 @@ int Event_Handler(SDL_Window* window,SDL_Renderer *renderer, Page* page, int* i,
 						{
 							if (fullscreen == 0)
 							{
-								SDL_SetWindowSize(window, 1000, 700);
+								SDL_DisplayMode dm;
+								SDL_GetCurrentDisplayMode(0, &dm);
+								int screen_w = dm.w;
+								int screen_h = dm.h;
+								SDL_SetWindowSize(window, screen_w / 2, screen_h);
 								fullscreen = 1;
 							}
 							else
