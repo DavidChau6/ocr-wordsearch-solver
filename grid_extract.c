@@ -7,7 +7,11 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-static void save_region(SDL_Surface *img, int x0, int y0, int x1, int y1,
+
+int rows_res = 0;
+int cols_res = 0;
+
+void save_region(SDL_Surface *img, int x0, int y0, int x1, int y1,
                         const char *name)
 {
     if (x1 <= x0 || y1 <= y0)
@@ -32,7 +36,8 @@ static void save_region(SDL_Surface *img, int x0, int y0, int x1, int y1,
     SDL_FreeSurface(out);
     printf("Area saved : %s (%dx%d)\n", name, w, h);
 }
-static inline Uint32 get_pixel_raw(SDL_Surface *surf, int x, int y)
+
+Uint32 get_pixel_raw(SDL_Surface *surf, int x, int y)
 {
     Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * surf->format->BytesPerPixel;
     switch (surf->format->BytesPerPixel) {
@@ -48,7 +53,7 @@ static inline Uint32 get_pixel_raw(SDL_Surface *surf, int x, int y)
     return 0;
 }
 
-static inline void set_pixel_raw(SDL_Surface *surf, int x, int y, Uint32 val)
+void set_pixel_raw(SDL_Surface *surf, int x, int y, Uint32 val)
 {
     Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * surf->format->BytesPerPixel;
     switch (surf->format->BytesPerPixel) {
@@ -69,7 +74,7 @@ static inline void set_pixel_raw(SDL_Surface *surf, int x, int y, Uint32 val)
     }
 }
 
-static inline Uint8 get_gray(SDL_Surface *surf, int x, int y)
+Uint8 get_gray(SDL_Surface *surf, int x, int y)
 {
     Uint32 raw = get_pixel_raw(surf, x, y);
     Uint8 r, g, b, a;
@@ -647,6 +652,8 @@ void split_letters(SDL_Surface *img, const char *prefix)
             char name[128];
             snprintf(name, sizeof(name), "%s_r%02d_c%02d.bmp", prefix, i - minus,
                  j);
+            if (len[i] > cols_res)
+                cols_res = len[i];
             save_region(mask_surface, box[i][j].x0,  box[i][j].y0,  box[i][j].x1,  box[i][j].y1, name);
             SDL_Surface *res = SDL_LoadBMP(name);
             SDL_Surface *small = resize_surface(res, 40, 40);
@@ -659,7 +666,14 @@ void split_letters(SDL_Surface *img, const char *prefix)
         if (len[i] == 0)
             minus++;
     }
-    
+    rows_res = nby - minus;
+    if (strcmp(prefix, "grid_rot") == 0) {
+            FILE *f = fopen("donnees.txt", "w");
+        if (f) {
+            fprintf(f, "%d %d\n", rows_res, cols_res);
+            fclose(f);
+        }
+    }
 
     free(mask);
     free(qx);

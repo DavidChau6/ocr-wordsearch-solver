@@ -1,13 +1,17 @@
 #ifndef GRID_EXTRACT_H
 #define GRID_EXTRACT_H
-static void save_region(SDL_Surface *img, int x0, int y0, int x1, int y1,
+
+extern int rows_res;
+extern int cols_res;
+
+void save_region(SDL_Surface *img, int x0, int y0, int x1, int y1,
                         const char *name);
 void color_to_mask(SDL_Surface *img, Uint8 *mask);
 void detect_two_blocks(Uint8 *mask, int w, int h, int *gx0, int *gy0, int *gx1,
                        int *gy1, int *wx0, int *wy0, int *wx1, int *wy1);
-static inline Uint32 get_pixel_raw(SDL_Surface *surf, int x, int y);
-static inline void set_pixel_raw(SDL_Surface *surf, int x, int y, Uint32 val);
-static inline Uint8 get_gray(SDL_Surface *surf, int x, int y);
+Uint32 get_pixel_raw(SDL_Surface *surf, int x, int y);
+void set_pixel_raw(SDL_Surface *surf, int x, int y, Uint32 val);
+Uint8 get_gray(SDL_Surface *surf, int x, int y);
 void convert_to_grayscale(SDL_Surface* surface);
 void color_to_mask2(SDL_Surface *img, Uint8 *mask);
 void save_mask_as_bmp(Uint8 *mask, int w, int h, const char *filename);
