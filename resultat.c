@@ -365,6 +365,10 @@ int draw_words_and_save(const char *input_file,
     for (int i = 0; i < num_words; i++) {
         WordCoord wcoord = coords[i];
 
+        LINE_A = rand() % 255;
+        LINE_R = rand() % 255;
+        LINE_G = rand() % 255;
+        LINE_B = rand() % 255;
         if (wcoord.x1 < 0 || wcoord.x1 >= grid_cols ||
             wcoord.x2 < 0 || wcoord.x2 >= grid_cols ||
             wcoord.y1 < 0 || wcoord.y1 >= grid_rows ||
@@ -394,7 +398,6 @@ int draw_words_and_save(const char *input_file,
              LINE_THICKNESS);
              
     }
-
    
     if (SDL_SaveBMP(surface, output_file) != 0) {
         fprintf(stderr, "Erreur sauvegarde '%s' : %s\n",

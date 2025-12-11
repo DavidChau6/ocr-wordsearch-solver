@@ -5,13 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define LINE_R 255
-#define LINE_G 0
-#define LINE_B 0
-#define LINE_A 255
+int LINE_R = 255;
+int LINE_G = 0;
+int LINE_B = 0;
+int LINE_A = 255;
 
 
-#define LINE_THICKNESS 2
+#define LINE_THICKNESS 3
 
 
 typedef struct {
