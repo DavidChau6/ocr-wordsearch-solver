@@ -74,7 +74,7 @@ clean:
 	rm -f $(GRID_OBJS) $(TARGET_GRID) $(SOLVER_OBJS) $(TARGET_SOLVER) $(XOR_OBJS) $(TARGET_XOR) $(UI_OBJS) $(TARGET_UI) $(PROG_OBJS) $(TARGET_PROG) $(RESOU_OBJS) $(TARGET_RESOU) $(RESULT_OBJS) $(TARGET_RESULT)
 
 extra-clean:
-	rm -f grid_r*.bmp word_*.bmp grid*.bmp words*.bmp step*.bmp mask*.bmp output.txt word.txt coord.txt donnees.txt
+	rm -f grid_r*.bmp word_*.bmp grid*.bmp words*.bmp step*.bmp mask*.bmp output.txt word.txt coord.txt donnees.txt lvl_2_2.bmp
 
 .PHONY: all clean extra-clean
 

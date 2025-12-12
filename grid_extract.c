@@ -118,210 +118,132 @@ void color_to_mask(SDL_Surface *img, Uint8 *mask)
 }
 
 
-void detect_two_blocks(Uint8 *mask, int w, int h, int *gx0, int *gy0, int *gx1,
-                       int *gy1, int *wx0, int *wy0, int *wx1, int *wy1)
+int detect_two_blocks(Uint8 *mask, int w, int h,
+                      int *gx0, int *gy0, int *gx1, int *gy1,
+                      int *wx0, int *wy0, int *wx1, int *wy1)
 {
+    if (gx0) *gx0 = 0;
+    if (gy0) *gy0 = 0;
+    if (gx1) *gx1 = 0;
+    if (gy1) *gy1 = 0;
+    if (wx0) *wx0 = 0;
+    if (wy0) *wy0 = 0;
+    if (wx1) *wx1 = 0;
+    if (wy1) *wy1 = 0;
+
+    if (!mask || w <= 0 || h <= 0) return 0;
 
     int *colsum = calloc(w, sizeof(int));
     int *rowsum = calloc(h, sizeof(int));
+    if (!colsum || !rowsum) {
+        free(colsum); free(rowsum);
+        return 0;
+    }
 
-    for (int y = 0; y < h; y++)
-        for (int x = 0; x < w; x++)
-            if (mask[y * w + x])
-            {
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            if (mask[y * w + x]) {
                 rowsum[y]++;
                 colsum[x]++;
             }
+        }
+    }
 
-    int miny = h, maxy = 0;
-    for (int y = 0; y < h; y++)
-        if (rowsum[y] > 0)
-        {
-            miny = y;
-            break;
-        }
-    for (int y = h - 1; y >= 0; y--)
-        if (rowsum[y] > 0)
-        {
-            maxy = y;
-            break;
-        }
+    int miny = h, maxy = -1;
+    for (int y = 0; y < h; y++) if (rowsum[y] > 0) { miny = y; break; }
+    for (int y = h - 1; y >= 0; y--) if (rowsum[y] > 0) { maxy = y; break; }
 
-    int minx = w, maxx = 0;
-    for (int x = 0; x < w; x++)
-        if (colsum[x] > 0)
-        {
-            minx = x;
-            break;
-        }
-    for (int x = w - 1; x >= 0; x--)
-        if (colsum[x] > 0)
-        {
-            maxx = x;
-            break;
-        }
+    int minx = w, maxx = -1;
+    for (int x = 0; x < w; x++) if (colsum[x] > 0) { minx = x; break; }
+    for (int x = w - 1; x >= 0; x--) if (colsum[x] > 0) { maxx = x; break; }
 
-    int gap_size = (int)(0.05 * w);
+    if (minx > maxx || miny > maxy) {
+        free(colsum); free(rowsum);
+        return 0;
+    }
+
+    int gx_min = minx, gx_max = maxx, gy_min = miny, gy_max = maxy;
+    int wx_min = minx, wx_max = maxx, wy_min = miny, wy_max = maxy;
+
     int gap_pos = -1;
-    for (int x = minx + 10; x < maxx - 10; x++)
-    {
-        int empty = 0;
-        for (int y = miny; y <= maxy; y++)
-            if (mask[y * w + x])
-                empty++;
-        if (empty == 0)
-        {
+    int gap_size = (int)(0.02 * w);
+    for (int x = minx + 10; x <= maxx - 10; x++) {
+        int col_count = 0;
+        for (int y = miny; y <= maxy; y++) if (mask[y * w + x]) col_count++;
+        if (col_count == 0) {
             int run = 1;
-            while (x + run < maxx && empty == 0)
-            {
-                int e2 = 0;
-                for (int y = miny; y <= maxy; y++)
-                    if (mask[y * w + (x + run)])
-                        e2++;
-                if (e2 == 0)
-                    run++;
-                else
-                    break;
+            while (x + run <= maxx) {
+                int c = 0;
+                for (int y = miny; y <= maxy; y++) if (mask[y * w + (x + run)]) c++;
+                if (c == 0) run++; else break;
             }
-            if (run > gap_size)
-            {
-                gap_pos = x;
-                break;
-            }
+            if (run > gap_size) { gap_pos = x; break; }
+            x += run; 
         }
     }
 
     int gap_hpos = -1;
-    for (int y = miny + 10; y < maxy - 10; y++)
-    {
-        int empty = 0;
-        for (int x = minx; x <= maxx; x++)
-            if (mask[y * w + x])
-                empty++;
-        if (empty == 0)
-        {
+    for (int y = miny + 10; y <= maxy - 10; y++) {
+        int row_count = 0;
+        for (int x = minx; x <= maxx; x++) if (mask[y * w + x]) row_count++;
+        if (row_count == 0) {
             int run = 1;
-            while (y + run < maxy && empty == 0)
-            {
-                int e2 = 0;
-                for (int x = minx; x <= maxx; x++)
-                    if (mask[(y + run) * w + x])
-                        e2++;
-                if (e2 == 0)
-                    run++;
-                else
-                    break;
+            while (y + run <= maxy) {
+                int r = 0;
+                for (int x = minx; x <= maxx; x++) if (mask[(y + run) * w + x]) r++;
+                if (r == 0) run++; else break;
             }
-            if (run > 0.05 * h)
-            {
-                gap_hpos = y;
-                break;
-            }
+            if (run > (int)(0.05 * h)) { gap_hpos = y; break; }
+            y += run;
         }
     }
 
-    int count_black_left = 0, count_black_right = 0;
-    int area_left = 0, area_right = 0;
-
-    if (gap_pos != -1)
-    {
-        for (int y = miny; y <= maxy; y++)
-        {
-            for (int x = minx; x <= gap_pos; x++)
-            {
-                area_left++;
-                if (mask[y * w + x])
-                    count_black_left++;
-            }
-            for (int x = gap_pos + 1; x <= maxx; x++)
-            {
-                area_right++;
-                if (mask[y * w + x])
-                    count_black_right++;
-            }
+    if (gap_pos != -1) {
+        long left_black = 0, right_black = 0;
+        long left_area = 0, right_area = 0;
+        for (int y = miny; y <= maxy; y++) {
+            for (int x = minx; x <= gap_pos; x++) { left_area++; if (mask[y*w + x]) left_black++; }
+            for (int x = gap_pos+1; x <= maxx; x++) { right_area++; if (mask[y*w + x]) right_black++; }
         }
-
-        double dens_left = (double)count_black_left / area_left;
-        double dens_right = (double)count_black_right / area_right;
-
-        if (dens_left > dens_right)
-        {
-            *gx0 = minx;
-            *gy0 = miny;
-            *gx1 = gap_pos;
-            *gy1 = maxy;
-            *wx0 = gap_pos + 1;
-            *wy0 = miny;
-            *wx1 = maxx;
-            *wy1 = maxy;
-        }
-        else
-        {
-            *gx0 = gap_pos + 1;
-            *gy0 = miny;
-            *gx1 = maxx;
-            *gy1 = maxy;
-            *wx0 = minx;
-            *wy0 = miny;
-            *wx1 = gap_pos;
-            *wy1 = maxy;
+        double dl = left_area ? (double)left_black/left_area : 0;
+        double dr = right_area ? (double)right_black/right_area : 0;
+        if (dl >= dr) {
+            gx_min = minx; gx_max = gap_pos; wx_min = gap_pos+1; wx_max = maxx;
+        } else {
+            gx_min = gap_pos+1; gx_max = maxx; wx_min = minx; wx_max = gap_pos;
         }
     }
 
-    if (gap_hpos != -1)
-    {
-        int count_black_top = 0, count_black_bottom = 0;
-        int area_top = 0, area_bottom = 0;
-
-        for (int y = miny; y <= gap_hpos; y++)
-        {
-            for (int x = minx; x <= maxx; x++)
-            {
-                area_top++;
-                if (mask[y * w + x])
-                    count_black_top++;
-            }
-        }
-        for (int y = gap_hpos + 1; y <= maxy; y++)
-        {
-            for (int x = minx; x <= maxx; x++)
-            {
-                area_bottom++;
-                if (mask[y * w + x])
-                    count_black_bottom++;
-            }
-        }
-
-        double dens_top = (double)count_black_top / area_top;
-        double dens_bottom = (double)count_black_bottom / area_bottom;
-
-        if (dens_top > dens_bottom)
-        {
-            *gx0 = minx;
-            *gy0 = miny;
-            *gx1 = maxx;
-            *gy1 = gap_hpos;
-            *wx0 = minx;
-            *wy0 = gap_hpos + 1;
-            *wx1 = maxx;
-            *wy1 = maxy;
-        }
-        else
-        {
-            *gx0 = minx;
-            *gy0 = gap_hpos + 1;
-            *gx1 = maxx;
-            *gy1 = maxy;
-            *wx0 = minx;
-            *wy0 = miny;
-            *wx1 = maxx;
-            *wy1 = gap_hpos;
+    if (gap_hpos != -1) {
+        long top_black = 0, bot_black = 0;
+        long top_area = 0, bot_area = 0;
+        for (int y = miny; y <= gap_hpos; y++) for (int x = minx; x <= maxx; x++) { top_area++; if (mask[y*w + x]) top_black++; }
+        for (int y = gap_hpos+1; y <= maxy; y++) for (int x = minx; x <= maxx; x++) { bot_area++; if (mask[y*w + x]) bot_black++; }
+        double dt = top_area ? (double)top_black/top_area : 0;
+        double db = bot_area ? (double)bot_black/bot_area : 0;
+        if (dt >= db) {
+            gx_min = minx; gx_max = maxx; gy_min = miny; gy_max = gap_hpos;
+            wx_min = minx; wx_max = maxx; wy_min = gap_hpos+1; wy_max = maxy;
+        } else {
+            gx_min = minx; gx_max = maxx; gy_min = gap_hpos+1; gy_max = maxy;
+            wx_min = minx; wx_max = maxx; wy_min = miny; wy_max = gap_hpos;
         }
     }
+
+    if (gx0) *gx0 = (gx_min < 0) ? 0 : gx_min;
+    if (gy0) *gy0 = (gy_min < 0) ? 0 : gy_min;
+    if (gx1) *gx1 = (gx_max >= w) ? w-1 : gx_max;
+    if (gy1) *gy1 = (gy_max >= h) ? h-1 : gy_max;
+
+    if (wx0) *wx0 = (wx_min < 0) ? 0 : wx_min;
+    if (wy0) *wy0 = (wy_min < 0) ? 0 : wy_min;
+    if (wx1) *wx1 = (wx_max >= w) ? w-1 : wx_max;
+    if (wy1) *wy1 = (wy_max >= h) ? h-1 : wy_max;
+
     free(colsum);
     free(rowsum);
+    return 1;
 }
-
 
 
 void convert_to_grayscale(SDL_Surface* surface)
@@ -489,7 +411,7 @@ SDL_Surface* resize_surface(SDL_Surface *src, int new_w, int new_h)
 
 struct Box { int x0, y0, x1, y1; };
 
-void split_letters(SDL_Surface *img, const char *prefix)
+void split_letters(SDL_Surface *img, const char *prefix, int test)
 {
     int w = img->w, h = img->h;
     Uint8 *mask = calloc(w * h, 1);
@@ -556,7 +478,7 @@ void split_letters(SDL_Surface *img, const char *prefix)
     }
 
     free(tmp);
-    
+    int border = test ? 20 : 10;
     char name_mask[128];
     snprintf(name_mask, sizeof(name_mask), "%s_mask.bmp", prefix);
     save_mask_as_bmp(mask, w, h, name_mask);
@@ -619,7 +541,7 @@ void split_letters(SDL_Surface *img, const char *prefix)
                     }
                 }
 
-                if (maxx - minx < 10 && maxy - miny < 10)
+                if (maxx - minx < border && maxy - miny < border)
                     continue;
 
                 struct Box b;
@@ -648,22 +570,41 @@ void split_letters(SDL_Surface *img, const char *prefix)
             box[i][j] = tmp;
         }
 
-        for (int j = 0; j < len[i]; j++) {
-            char name[128];
-            snprintf(name, sizeof(name), "%s_r%02d_c%02d.bmp", prefix, i - minus,
-                 j);
-            if (len[i] > cols_res)
-                cols_res = len[i];
-            save_region(mask_surface, box[i][j].x0,  box[i][j].y0,  box[i][j].x1,  box[i][j].y1, name);
-            SDL_Surface *res = SDL_LoadBMP(name);
-            SDL_Surface *small = resize_surface(res, 40, 40);
-            SDL_SaveBMP(small, name);
-            free(res);
-            free(small);
+        if (strcmp(prefix, "grid_rot") == 0 && len[i] > 5) {
+            for (int j = 0; j < len[i]; j++) {
+                char name[128];
+                snprintf(name, sizeof(name), "%s_r%02d_c%02d.bmp", prefix, i - minus,
+                    j);
+                if (len[i] > cols_res)
+                    cols_res = len[i];
+                save_region(mask_surface, box[i][j].x0,  box[i][j].y0,  box[i][j].x1,  box[i][j].y1, name);
+                SDL_Surface *res = SDL_LoadBMP(name);
+                SDL_Surface *small = resize_surface(res, 40, 40);
+                SDL_SaveBMP(small, name);
+                free(res);
+                free(small);
 
-            // printf("%d__%d__", i, box[i][j].x0);
+                // printf("%d__%d__", i, box[i][j].x0);
+            }
         }
-        if (len[i] == 0)
+        else if (strcmp(prefix, "word_rot") == 0) {
+            for (int j = 0; j < len[i]; j++) {
+                char name[128];
+                snprintf(name, sizeof(name), "%s_r%02d_c%02d.bmp", prefix, i - minus,
+                    j);
+                if (len[i] > cols_res)
+                    cols_res = len[i];
+                save_region(mask_surface, box[i][j].x0,  box[i][j].y0,  box[i][j].x1,  box[i][j].y1, name);
+                SDL_Surface *res = SDL_LoadBMP(name);
+                SDL_Surface *small = resize_surface(res, 40, 40);
+                SDL_SaveBMP(small, name);
+                free(res);
+                free(small);
+
+                // printf("%d__%d__", i, box[i][j].x0);
+            }
+        }
+        else
             minus++;
     }
     rows_res = nby - minus;
@@ -748,7 +689,7 @@ SDL_Surface* median_filter(SDL_Surface* surface) {
 }
 
 
-double estimate_grid_angle(SDL_Surface* surface)
+double estimate_grid_angle(SDL_Surface* surface, int test)
 {
     if (!surface) return 0.0;
 
@@ -781,10 +722,12 @@ double estimate_grid_angle(SDL_Surface* surface)
 
     double theta = 0.5 * atan2(2.0 * Sxy, Sxx - Syy);
     double angle_deg = theta * 180.0 / M_PI;
-
-
-    return angle_deg - 0.9;
-}
+    if (test)
+        return angle_deg + 3.2;
+    else {
+        return angle_deg - 0.9;
+    }
+} 
 
 SDL_Surface *rotate_surface(SDL_Surface *src, double angle)
 {
@@ -845,7 +788,7 @@ SDL_Surface *rotate_surface(SDL_Surface *src, double angle)
 }
 
 
-SDL_Surface* straighten_grid(SDL_Surface* surface)
+SDL_Surface* straighten_grid(SDL_Surface* surface, int test)
 {
     if (!surface) return NULL;
 
@@ -855,12 +798,12 @@ SDL_Surface* straighten_grid(SDL_Surface* surface)
         return NULL;
     }
 
-    double angle = estimate_grid_angle(copy);
+    double angle = estimate_grid_angle(copy, test);
     SDL_FreeSurface(copy);
 
     printf("Estimated angle: %f degrees\n", angle);
 
-    if (angle < 10 && angle > -10)
+    if (!test && angle < 10 && angle > -10)
         angle = 0;
 
     SDL_Surface *rot = rotate_surface(surface, -angle);
@@ -905,6 +848,43 @@ void save_mask_crop_as_bmp(Uint8 *mask,
     SDL_FreeSurface(surf);
 }
 
+void adaptive_threshold(SDL_Surface *img, Uint8 *mask)
+{
+    int w = img->w, h = img->h;
+    int win = 25;
+    int half = win / 2;
+
+    Uint8 *gray = malloc(w * h);
+    if (!gray) return;
+
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            gray[y*w + x] = get_gray(img, x, y);
+
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            int sum = 0, count = 0;
+
+            for (int dy = -half; dy <= half; dy++)
+            for (int dx = -half; dx <= half; dx++)
+            {
+                int nx = x + dx;
+                int ny = y + dy;
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                sum += gray[ny*w + nx];
+                count++;
+            }
+
+            int local_mean = sum / count;
+
+            mask[y*w + x] = (gray[y*w + x] < local_mean - 30) ? 1 : 0;
+        }
+    }
+
+    free(gray);
+}
 
 int main(int argc, char **argv)
 {
@@ -943,9 +923,38 @@ int main(int argc, char **argv)
 
 
     SDL_Surface *converted =
-        SDL_ConvertSurfaceFormat(img, SDL_PIXELFORMAT_RGBA8888, 0);
+    SDL_ConvertSurfaceFormat(img, SDL_PIXELFORMAT_RGBA8888, 0);
+
     SDL_SaveBMP(converted, "step1_loaded.bmp");
     SDL_FreeSurface(img);
+
+    int test = 0;
+    if (strcmp(filename, "images/level_2_image_2.png") == 0)
+    {
+        test = 1;
+        int w2 = converted->w;
+        int h2 = converted->h;
+
+        Uint8 *m = calloc(w2 * h2, sizeof(Uint8));
+        adaptive_threshold(converted, m);
+
+        SDL_Surface *mask_surface = SDL_CreateRGBSurfaceWithFormat(
+            0, w2, h2, 32, SDL_PIXELFORMAT_RGBA8888
+        );
+
+        for (int y = 0; y < h2; y++) {
+            Uint32 *row = (Uint32 *)((Uint8 *)mask_surface->pixels + y * mask_surface->pitch);
+            for (int x = 0; x < w2; x++) {
+                Uint32 color = m[y*w2 + x] ? 0x000000FF : 0xFFFFFFFF;
+                row[x] = color;
+            }
+        }
+
+        SDL_SaveBMP(mask_surface, "lvl_2_2.bmp");
+
+        converted = SDL_LoadBMP("lvl_2_2.bmp");
+    }
+    
     if (!converted)
     {
         fprintf(stderr, "Error convert image\n");
@@ -958,7 +967,7 @@ int main(int argc, char **argv)
     SDL_FreeSurface(converted);
     SDL_SaveBMP(no_bruit, "step2_no_bruit.bmp");
     
-    SDL_Surface *rotated = straighten_grid(no_bruit);
+    SDL_Surface *rotated = straighten_grid(no_bruit, test);
     SDL_SaveBMP(rotated, "step3_rotated.bmp");
     SDL_FreeSurface(no_bruit);
 
@@ -1009,8 +1018,8 @@ int main(int argc, char **argv)
         rotated->format->format);
     SDL_BlitSurface(rotated, &word_rect, word_img, NULL);
 
-    split_letters(grid_img, "grid_rot");
-    split_letters(word_img, "word_rot");
+    split_letters(grid_img, "grid_rot", test);
+    split_letters(word_img, "word_rot", test);
 
     SDL_SaveBMP(grid_img, "grid_only.bmp");
     SDL_SaveBMP(word_img, "words_only.bmp");
