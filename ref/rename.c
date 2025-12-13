@@ -36,7 +36,7 @@ int main() {
 
     for (int i = 0; i < count; i++) {
         int n = numbers[i];
-        int offset = (n - 1) / 8;
+        int offset = (n - 1) / 11;
         int new_n = n + offset;
 
         char oldName[256];

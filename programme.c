@@ -41,11 +41,11 @@ int main()
         	printf("Aucun modèle trouvé. Entraînement...\n");
         	init_network();
 
-        	double* dataset[234];
-        	int labels[234];
+        	double* dataset[312];
+        	int labels[312];
         	int w, h;
 
-        	for (int i = 1; i <= 234; i++)
+        	for (int i = 1; i <= 312; i++)
         	{
             		char filename[128];
             		sprintf(filename, "ref/ref_%i.bmp", i);
@@ -57,14 +57,14 @@ int main()
                 		continue;
             		}
 	
-            		labels[i - 1] = (i - 1) / 9; 
+            		labels[i - 1] = (i - 1) / 12; 
         	}
 
         	const int EPOCHS = 300;  
 
         	for (int epoch = 0; epoch < EPOCHS; epoch++)
         	{
-            		for (int i = 0; i < 234; i++)
+            		for (int i = 0; i < 312; i++)
             		{
                 		if (dataset[i])
                     		train_sample(dataset[i], labels[i]);
