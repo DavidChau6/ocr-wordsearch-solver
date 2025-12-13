@@ -647,7 +647,14 @@ int Event_Handler(SDL_Window* window,SDL_Renderer *renderer, Page* page, int* i,
 									int status;
 									waitpid(pid, &status,0);
 								}
-								Image(renderer, "grid_boxed.bmp", 675, 340, &page->textmanager[6], &page->button[6], 1, 1, 0);
+								if (strcmp(*currim,"images/level_2_image_2.png") == 0)
+								{
+									Image(renderer, "grid_boxed.bmp", 675, 340, &page->textmanager[6], &page->button[6], 1, 0.75, 0);
+								}
+								else
+								{
+									Image(renderer, "grid_boxed.bmp", 675, 340, &page->textmanager[6], &page->button[6], 1, 1, 0);
+								}
 								*i = 6;
 							}
 						}
